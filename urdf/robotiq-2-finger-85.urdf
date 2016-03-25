@@ -1,0 +1,234 @@
+<?xml version="1.0" ?>
+<robot name="robotiq-2-finger-85" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<link name="base_link">
+</link>
+
+<joint name="base_link_joint" type="fixed">
+  <parent link="base_link"/>
+  <child link="robotiq_85_coupling"/>
+</joint>
+
+<link name="robotiq_85_coupling">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_coupling.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_coupling.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </collision>
+</link>
+
+<joint name="robotiq_85_base_joint" type="fixed">
+  <parent link="robotiq_85_coupling"/>
+  <child link="robotiq_85_base"/>
+</joint>
+
+<link name="robotiq_85_base">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_base.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_base.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_left_1">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_1.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0305864 0 -0.0549191"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_1.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0305864 0 -0.0549191"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_left_2">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_2.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0621231 0 -0.0511592"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_2.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0621231 0 -0.0511592"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_left_3">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_3.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0127161 0 -0.0613987"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_3.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0127161 0 -0.0613987"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_left_4">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_4.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0498492 0 -0.1048415"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_4.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="0.0498492 0 -0.1048415"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_right_1">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_1.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0305864 0 -0.0549191"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_1.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0305864 0 -0.0549191"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_right_2">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_2.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0621231 0 -0.0511592"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_2.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0621231 0 -0.0511592"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_right_3">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_3.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0127161 0 -0.0613987"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_3.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0127161 0 -0.0613987"/>
+  </collision>
+</link>
+
+<link name="robotiq_85_finger_right_4">
+  <visual>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_4.dae"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0498492 0 -0.1048415"/>
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_4.stl"/>
+    </geometry>
+    <origin rpy="0 0 0" xyz="-0.0498492 0 -0.1048415"/>
+  </collision>
+</link>
+
+<joint name="robotiq_85_finger_left_1_joint" type="revolute">
+  <parent link="robotiq_85_base"/>
+  <child link="robotiq_85_finger_left_1"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="-0.0305864 0 0.0549191"/>
+  <limit effort="1000" lower="0" upper="0.811" velocity="2.0"/>
+</joint>
+
+<joint name="robotiq_85_finger_left_2_joint" type="fixed">
+  <parent link="robotiq_85_finger_left_1"/>
+  <child link="robotiq_85_finger_left_2"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="-0.0315367 0 -0.0037599"/>
+</joint>
+
+<joint name="robotiq_85_finger_left_3_joint" type="revolute">
+  <parent link="robotiq_85_base"/>
+  <child link="robotiq_85_finger_left_3"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="-0.0127161 0 0.0613987"/>
+  <limit effort="1000" lower="0" upper="0.811" velocity="2.0"/>
+  <mimic joint="robotiq_85_finger_left_1_joint" multiplier="1"/>
+</joint>
+
+<joint name="robotiq_85_finger_left_4_joint" type="revolute">
+  <parent link="robotiq_85_finger_left_3"/>
+  <child link="robotiq_85_finger_left_4"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="-0.0371331 0 0.0434428"/>
+  <mimic joint="robotiq_85_finger_left_1_joint" multiplier="-1"/>
+  <limit effort="1000" lower="-0.811" upper="0" velocity="2.0"/>
+</joint>
+
+<joint name="robotiq_85_finger_right_1_joint" type="revolute">
+  <parent link="robotiq_85_base"/>
+  <child link="robotiq_85_finger_right_1"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="0.0305864 0 0.0549191"/>
+  <mimic joint="robotiq_85_finger_left_1_joint" multiplier="-1"/>
+  <limit effort="1000" lower="-0.811" upper="0" velocity="2.0"/>
+</joint>
+
+<joint name="robotiq_85_finger_right_2_joint" type="fixed">
+  <parent link="robotiq_85_finger_right_1"/>
+  <child link="robotiq_85_finger_right_2"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="0.0315367 0 -0.0037599"/>
+</joint>
+
+<joint name="robotiq_85_finger_right_3_joint" type="revolute">
+  <parent link="robotiq_85_base"/>
+  <child link="robotiq_85_finger_right_3"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="0.0127161 0 0.0613987"/>
+  <mimic joint="robotiq_85_finger_left_1_joint" multiplier="-1"/>
+  <limit effort="1000" lower="-0.811" upper="0" velocity="2.0"/>
+</joint>
+
+<joint name="robotiq_85_finger_right_4_joint" type="revolute">
+  <parent link="robotiq_85_finger_right_3"/>
+  <child link="robotiq_85_finger_right_4"/>
+  <axis xyz="0 1 0"/>
+  <origin rpy="0 0 0" xyz="0.0371331 0 0.0434428"/>
+  <mimic joint="robotiq_85_finger_left_1_joint" multiplier="1"/>
+  <limit effort="1000" lower="0" upper="0.811" velocity="2.0"/>
+</joint>
+
+</robot>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>xamla_egomo</name>
+  <version>1.0.0</version>
+  <description>
+      URDF description of Xamla egomo sensorhead on Universal UR5
+  </description>
+
+  <maintainer email="andreas.koepf@xamla.com">Andreas Koepf</maintainer>
+  <author email="alexander.kahlkopf@xamla.com">Alexander Kahlkopf</author>
+
+  <license>BSD</license>
+
+  <url type="website">http://www.xamla.com/</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+  </export>
+</package>
