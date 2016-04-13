@@ -5,7 +5,27 @@
 <!-- =================================================================================== -->
 <robot name="ur5" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <!-- ur5 arm -->
-
+ <!-- common stuff -->
+  <gazebo>
+    <plugin filename="libgazebo_ros_control.so" name="ros_control">
+      <!--robotNamespace>/UR5/</robotNamespace-->
+      <!--robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType-->
+    </plugin>
+    <!--
+    <plugin name="gazebo_ros_power_monitor_controller" filename="libgazebo_ros_power_monitor.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>1.0</updateRate>
+      <timeout>5</timeout>
+      <powerStateTopic>power_state</powerStateTopic>
+      <powerStateRate>10.0</powerStateRate>
+      <fullChargeCapacity>87.78</fullChargeCapacity>     
+      <dischargeRate>-474</dischargeRate>
+      <chargeRate>525</chargeRate>
+      <dischargeVoltage>15.52</dischargeVoltage>
+      <chargeVoltage>16.41</chargeVoltage>
+    </plugin>
+-->
+  </gazebo>
   <link name="base_link">
     <visual>
       <geometry>
@@ -29,7 +49,7 @@
   <joint name="shoulder_pan_joint" type="revolute">
     <parent link="base_link"/>
     <child link="shoulder_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.089159"/>
+    <origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/>
     <axis xyz="0 0 1"/>
     <limit effort="150.0" lower="-3.14159265" upper="3.14159265" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
@@ -207,6 +227,7 @@
       <origin rpy="0 0 0" xyz="-0.01 0 0"/>
     </collision>
   </link>
+<!--TRANSMISSION FOR THE ARM-->
   <transmission name="shoulder_pan_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="shoulder_pan_joint">
@@ -520,7 +541,7 @@
   </collision>
 </link>
 
-<joint name="robotiq_85_finger_right_1_joint" type="revolute">
+<joint name="robotiq_85_finger_right_1_joint" type="continuous">
   <parent link="robotiq_85_base"/>
   <child link="robotiq_85_finger_right_1"/>
   <axis xyz="0 1 0"/>
@@ -535,30 +556,30 @@
   <origin rpy="0 0 0" xyz="-0.0315367 0 -0.0037599"/>
 </joint>
 
-<joint name="robotiq_85_finger_right_3_joint" type="revolute">
+<joint name="robotiq_85_finger_right_3_joint" type="continuous">
   <parent link="robotiq_85_base"/>
   <child link="robotiq_85_finger_right_3"/>
   <axis xyz="0 1 0"/>
   <origin rpy="0 0 0" xyz="-0.0127161 0 0.0613987"/>
   <limit effort="1000" lower="0" upper="0.811" velocity="2.0"/>
-  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="1"/>
+  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="1" offset="0"/>
 </joint>
 
-<joint name="robotiq_85_finger_right_4_joint" type="revolute">
+<joint name="robotiq_85_finger_right_4_joint" type="continuous">
   <parent link="robotiq_85_finger_right_3"/>
   <child link="robotiq_85_finger_right_4"/>
   <axis xyz="0 1 0"/>
   <origin rpy="0 0 0" xyz="-0.0371331 0 0.0434428"/>
-  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="-1"/>
+  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="-1" offset="0"/>
   <limit effort="1000" lower="-0.811" upper="0" velocity="2.0"/>
 </joint>
 
-<joint name="robotiq_85_finger_left_1_joint" type="revolute">
+<joint name="robotiq_85_finger_left_1_joint" type="continuous">
   <parent link="robotiq_85_base"/>
   <child link="robotiq_85_finger_left_1"/>
   <axis xyz="0 1 0"/>
   <origin rpy="0 0 0" xyz="0.0305864 0 0.0549191"/>
-  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="-1"/>
+  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="-1" offset="0"/>
   <limit effort="1000" lower="-0.811" upper="0" velocity="2.0"/>
 </joint>
 
@@ -569,23 +590,34 @@
   <origin rpy="0 0 0" xyz="0.0315367 0 -0.0037599"/>
 </joint>
 
-<joint name="robotiq_85_finger_left_3_joint" type="revolute">
+<joint name="robotiq_85_finger_left_3_joint" type="continuous">
   <parent link="robotiq_85_base"/>
   <child link="robotiq_85_finger_left_3"/>
   <axis xyz="0 1 0"/>
   <origin rpy="0 0 0" xyz="0.0127161 0 0.0613987"/>
-  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="-1"/>
+  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="-1" offset="0"/>
   <limit effort="1000" lower="-0.811" upper="0" velocity="2.0"/>
 </joint>
 
-<joint name="robotiq_85_finger_left_4_joint" type="revolute">
+<joint name="robotiq_85_finger_left_4_joint" type="continuous">
   <parent link="robotiq_85_finger_left_3"/>
   <child link="robotiq_85_finger_left_4"/>
   <axis xyz="0 1 0"/>
   <origin rpy="0 0 0" xyz="0.0371331 0 0.0434428"/>
-  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="1"/>
+  <mimic joint="robotiq_85_finger_right_1_joint" multiplier="1" offset="0"/>
   <limit effort="1000" lower="0" upper="0.811" velocity="2.0"/>
 </joint>
+
+  <!--transmission name="robotiq_85_finger_right_1_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="robotiq_85_finger_right_1_joint">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="robotiq_85_finger_right_1_motor">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission-->
 
 <!-- ========================================== -->
 
