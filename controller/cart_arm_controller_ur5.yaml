@@ -1,0 +1,4 @@
+arm_cartesian_pose_controller:
+  type: EECartImpedControlPlugin
+  root_name: base_link
+  tip_name: tool0
