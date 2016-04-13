@@ -2,35 +2,25 @@
 hardware_control_loop:
    loop_hz: 125
 
-arm_controller:
-  type: effort_controllers/JointTrajectoryController
-  topic: "test"
-  joints:
+# Settings for ros_control hardware interface
+hardware_interface:
+   joints:
      - shoulder_pan_joint
      - shoulder_lift_joint
      - elbow_joint
      - wrist_1_joint
      - wrist_2_joint
      - wrist_3_joint
-  gains:
-    shoulder_pan_joint: {p: 10000.0, i: 500.0, d: 200.0, i_clamp: 100.0}
-    shoulder_lift_joint: {p: 10000.0, i: 500.0, d: 200.0, i_clamp: 100.0}
-    elbow_joint: {p: 10000.0, i: 500.0, d: 100.0, i_clamp: 100.0}
-    wrist_1_joint: {p: 100.0, i: 0.0, d: 10.0, i_clamp: 0.0}
-    wrist_2_joint: {p: 100.0, i: 0.0, d: 10.0, i_clamp: 0.0}
-    wrist_3_joint: {p: 100.0, i: 0.0, d: 0.0, i_clamp: 0.0}
-  constraints:
-      goal_time: 0.6
-      stopped_velocity_tolerance: 0.5
-      shoulder_pan_joint: {trajectory: 0.1, goal: 0.1}
-      shoulder_lift_joint: {trajectory: 0.1, goal: 0.1}
-      elbow_joint: {trajectory: 0.1, goal: 0.1}
-      wrist_1_joint: {trajectory: 0.1, goal: 0.1}
-      wrist_2_joint: {trajectory: 0.1, goal: 0.1}
-      wrist_3_joint: {trajectory: 0.1, goal: 0.1}
-  stop_trajectory_duration: 0.5
-  state_publish_rate:  25
-  action_monitor_rate: 10
+
+# Publish all joint states ----------------------------------
+joint_state_controller:
+   type:         joint_state_controller/JointStateController
+   publish_rate: 125
+
+# Publish wrench ----------------------------------
+force_torque_sensor_controller:
+   type:         force_torque_sensor_controller/ForceTorqueSensorController
+   publish_rate: 125
 
 # Joint Trajectory Controller - position based -------------------------------
 # For detailed explanations of parameter see http://wiki.ros.org/joint_trajectory_controller
@@ -104,3 +94,33 @@ vel_based_pos_traj_controller:
    # action_monitor_rate: 20 # Defaults to 20
    #hold_trajectory_duration: 0 # Defaults to 0.5
 
+
+arm_controller:
+  type: effort_controllers/JointTrajectoryController
+  topic: "test"
+  joints:
+     - shoulder_pan_joint
+     - shoulder_lift_joint
+     - elbow_joint
+     - wrist_1_joint
+     - wrist_2_joint
+     - wrist_3_joint
+  gains:
+    shoulder_pan_joint: {p: 10000.0, i: 500.0, d: 200.0, i_clamp: 100.0}
+    shoulder_lift_joint: {p: 10000.0, i: 500.0, d: 200.0, i_clamp: 100.0}
+    elbow_joint: {p: 10000.0, i: 500.0, d: 100.0, i_clamp: 100.0}
+    wrist_1_joint: {p: 100.0, i: 0.0, d: 10.0, i_clamp: 0.0}
+    wrist_2_joint: {p: 100.0, i: 0.0, d: 10.0, i_clamp: 0.0}
+    wrist_3_joint: {p: 100.0, i: 0.0, d: 0.0, i_clamp: 0.0}
+  constraints:
+      goal_time: 0.6
+      stopped_velocity_tolerance: 0.5
+      shoulder_pan_joint: {trajectory: 0.1, goal: 0.1}
+      shoulder_lift_joint: {trajectory: 0.1, goal: 0.1}
+      elbow_joint: {trajectory: 0.1, goal: 0.1}
+      wrist_1_joint: {trajectory: 0.1, goal: 0.1}
+      wrist_2_joint: {trajectory: 0.1, goal: 0.1}
+      wrist_3_joint: {trajectory: 0.1, goal: 0.1}
+  stop_trajectory_duration: 0.5
+  state_publish_rate:  25
+  action_monitor_rate: 10

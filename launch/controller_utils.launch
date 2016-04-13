@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <launch>
+
+<!--rosparam file="$(find ur_modern_driver)/config/ur5_controllers.yaml" command="load"/-->
+  <rosparam file="$(find xamla_egomo)/controller/arm_controller_ur5.yaml" command="load"/>
   
   <!-- joint_state_controller -->
   <rosparam file="$(find xamla_egomo)/controller/joint_state_controller.yaml" command="load"/>
-  <node name="joint_state_controller_spawner" pkg="controller_manager" type="spawner" args="joint_state_controller" />
-
-
-  <rosparam file="$(find xamla_egomo)/controller/arm_controller_ur5.yaml" command="load"/>
-  <node name="arm_controller_spawner" pkg="controller_manager" type="spawner" args="arm_controller" />
-  <node name="pos_based_pos_traj_controller_spawner" pkg="controller_manager" type="spawner" args="pos_based_pos_traj_controller" />
-  <node name="vel_based_pos_traj_controller_spawner" pkg="controller_manager" type="spawner" args="vel_based_pos_traj_controller" />
+  <node name="ros_control_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="joint_state_controller pos_based_pos_traj_controller" />
+<!--node name="ros_control_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
+    output="screen" args="joint_state_controller force_torque_sensor_controller vel_based_pos_traj_controller" /-->
 
     
 </launch>

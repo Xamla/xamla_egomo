@@ -1,15 +1,28 @@
 <?xml version="1.0"?>
 <launch>
-
+  <!-- GDB functionality -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
  <!-- robot_ip: IP-address of the robot's socket-messaging server -->
   <arg name="robot_ip" default="192.168.1.31"/>
   <arg name="limited" default="true"/>
   <arg name="min_payload"  default="0.0"/>
   <arg name="max_payload"  default="5.0"/>
+  <arg name="max_velocity" default="10.0"/> <!-- [rad/s] -->
   <arg name="prefix" default="" />
     <!-- send robot urdf to param server -->
   <include file="$(find xamla_egomo)/launch/ur5_description.launch"/>
-  
+
+    <!-- Load hardware interface -->
+  <node name="ur_hardware_interface" pkg="ur_modern_driver" type="ur_driver" output="screen" >
+	<param name="launch-prefix" type="str" value="$(arg launch_prefix)"/>
+    <param name="robot_ip_address" type="str" value="$(arg robot_ip)"/>
+    <param name="min_payload" type="double" value="$(arg min_payload)"/>
+    <param name="max_payload" type="double" value="$(arg max_payload)"/>
+    <param name="max_velocity" type="double" value="$(arg max_velocity)"/>
+    <param name="use_ros_control" type="bool" value="True"/>
+  </node>
   <!-- ur common (also robot state publisher etc)-->
   <include file="$(find ur_modern_driver)/launch/ur_common.launch">
     <arg name="prefix"  value="$(arg prefix)" />
@@ -18,8 +31,12 @@
     <arg name="max_payload"  value="$(arg max_payload)"/>
   </include>  
 
+<arg name="sim" default="false" />
+    
+  <!-- Remap follow_joint_trajectory -->
+  <remap if="$(arg sim)" from="/follow_joint_trajectory" to="/arm_controller/follow_joint_trajectory"/>
   <!--start controllers -->
-  <include file="$(find xamla_egomo)/launch/contoller_utils.launch">  </include>  
+  <include file="$(find xamla_egomo)/launch/controller_utils.launch">  </include>  
 
 
 
