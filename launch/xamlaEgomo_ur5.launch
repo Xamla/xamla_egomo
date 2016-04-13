@@ -10,7 +10,7 @@
     <!-- send robot urdf to param server -->
   <include file="$(find xamla_egomo)/launch/ur5_description.launch"/>
   
-  <!-- ur common -->
+  <!-- ur common (also robot state publisher etc)-->
   <include file="$(find ur_modern_driver)/launch/ur_common.launch">
     <arg name="prefix"  value="$(arg prefix)" />
     <arg name="robot_ip" value="$(arg robot_ip)"/>
@@ -18,51 +18,9 @@
     <arg name="max_payload"  value="$(arg max_payload)"/>
   </include>  
 
+  <!--start controllers -->
+  <include file="$(find xamla_egomo)/launch/contoller_utils.launch">  </include>  
 
 
-
-
-  <!-- Load controller settings -->
-  <rosparam file="$(find ur_modern_driver)/config/ur5_controllers.yaml" command="load"/>
-
-  <!-- spawn controller manager -->
-  <node name="ros_control_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
-    output="screen" args="joint_state_controller force_torque_sensor_controller vel_based_pos_traj_controller" />
-
-  <!-- load other controller --> 
-  <node name="ros_control_controller_manager" pkg="controller_manager" type="controller_manager" respawn="false"
-    output="screen" args="load pos_based_pos_traj_controller" /> 
-
-  <!-- Convert joint states to /tf tranforms -->
-  <!--node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/-->
-
-
-<!-- Moveit -->
-
-  <arg name="sim" default="false" />
-  <arg name="debug" default="false" />
-    
-  <!-- Remap follow_joint_trajectory -->
-  <remap if="$(arg sim)" from="/follow_joint_trajectory" to="/arm_controller/follow_joint_trajectory"/>
-  
-  <!-- Launch moveit -->
-  <include file="$(find ur5_moveit_config)/launch/move_group.launch">
-    <arg name="debug" default="$(arg debug)" />
-  </include>
-
-<!-- RVIZ -->
-
-  <arg name="debug_rviz" default="false" />
-  <arg unless="$(arg debug_rviz)" name="launch_prefix" value="" />
-  <arg     if="$(arg debug_rviz)" name="launch_prefix" value="gdb --ex run --args" />
-
-  <arg name="config" default="true" />
-  <arg unless="$(arg config)" name="command_args" value="" />
-  <arg     if="$(arg config)" name="command_args" value="-d $(find ur5_moveit_config)/launch/moveit.rviz" />
-  
-  <node name="$(anon rviz)" launch-prefix="$(arg launch_prefix)" pkg="rviz" type="rviz" respawn="false"
-	args="$(arg command_args)" output="screen">
-    <rosparam command="load" file="$(find ur5_moveit_config)/config/kinematics.yaml"/>
-  </node>
 
 </launch>

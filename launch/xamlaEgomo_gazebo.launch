@@ -16,10 +16,17 @@
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model robot -z 0.1" respawn="false" output="screen" />
+  <!-- Robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="50.0" />
+    <param name="tf_prefix" type="string" value="" />
+  </node>
+
+  <!-- Fake Calibration -->
+  <node pkg="rostopic" type="rostopic" name="fake_joint_calibration"
+        args="pub /calibrated std_msgs/Bool true" />
 
   <include file="$(find xamla_egomo)/launch/controller_utils.launch"/>
 
-  <rosparam file="$(find ur_gazebo)/controller/arm_controller_ur5.yaml" command="load"/>
-  <node name="arm_controller_spawner" pkg="controller_manager" type="spawner" args="arm_controller" />
 
 </launch>
