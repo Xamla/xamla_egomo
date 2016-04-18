@@ -19,31 +19,42 @@
     <!-- send robot urdf to param server -->
   <include file="$(find xamla_egomo)/launch/ur5_description.launch"/>
 
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
 
   <!-- Load hardware interface -->
-  <node name="ur_hardware_interface" pkg="ur_modern_driver" type="ur_driver" output="screen" launch-prefix="$(arg launch_prefix)">
+  <!--node name="ur_hardware_interface" pkg="ur_modern_driver" type="ur_driver" output="screen" launch-prefix="$(arg launch_prefix)">
     <param name="robot_ip_address" type="str" value="$(arg robot_ip)"/>
     <param name="min_payload" type="double" value="$(arg min_payload)"/>
     <param name="max_payload" type="double" value="$(arg max_payload)"/>
     <param name="max_velocity" type="double" value="$(arg max_velocity)"/>
     <param name="use_ros_control" type="bool" value="True"/>
+  </node-->
+
+  <!-- driver -->
+  <node name="ur_hardware_interface" pkg="ur_modern_driver" type="ur_driver" output="screen">
+  <!-- copy the specified IP address to be consistant with ROS-Industrial spec. -->
+    <param name="prefix" type="str" value="$(arg prefix)" />
+    <param name="robot_ip_address" type="str" value="$(arg robot_ip)" />
+    <param name="min_payload" type="double" value="$(arg min_payload)" />
+    <param name="max_payload" type="double" value="$(arg max_payload)" />
+    <param name="max_velocity" type="double" value="$(arg max_velocity)" />
+    <param name="servoj_time" type="double" value="$(arg servoj_time)" />
+	<param name="base_frame" type="str" value="$(arg base_frame)"/>
+    <param name="tool_frame" type="str" value="$(arg tool_frame)"/>
+    <param name="use_ros_control" type="bool" value="True"/>
   </node>
 
-  <!-- ur common (also robot state publisher etc)-->
-  <!--include file="$(find ur_modern_driver)/launch/ur_common.launch">
-    <arg name="prefix"  value="$(arg prefix)" />
-    <arg name="robot_ip" value="$(arg robot_ip)"/>
-    <arg name="min_payload"  value="$(arg min_payload)"/>
-    <arg name="max_payload"  value="$(arg max_payload)"/>
-  </include-->  
+  <!--node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /-->
+  <!-- Robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="125.0" />
+    <param name="tf_prefix" type="string" value="" />
+  </node>
 
-<arg name="sim" default="false" />
-    
-  <!-- Remap follow_joint_trajectory -->
-  <remap if="$(arg sim)" from="/follow_joint_trajectory" to="/arm_controller/follow_joint_trajectory"/>
   <!--start controllers -->
   <include file="$(find xamla_egomo)/launch/controller_utils.launch">  </include>  
+
+
 
 
 </launch>
