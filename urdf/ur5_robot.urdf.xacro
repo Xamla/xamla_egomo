@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="xamla_egomo" >
+  <!-- gripper -->
+    <xacro:include filename="$(find robotiq_85_description)/urdf/robotiq_85_gripper.urdf.xacro" /> 
+
+  <!-- ur5 -->
+  <xacro:include filename="$(find xamla_egomo)/urdf/ur5.urdf.xacro" />
+
+  <!-- arm -->
+	<!-- property list -->
+	<!--xacro:property name="robot_stand_height" value="0.20"/-->
+	<xacro:property name="arm_prefix" value=""/>
+	<xacro:property name="joint_limited" value="false"/>
+<!-- instantiating arm and gripper -->	
+	<xacro:ur5_robot prefix="${arm_prefix}" joint_limited='${joint_limited}'/>
+<link name="world"/>
+  <joint name="world_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+  </joint>
+
+<link name="base"/>
+  <joint name="base_link-base_fixed_joint" type="fixed">
+    <!-- NOTE: this rotation is only needed as long as base_link itself is
+                 not corrected wrt the real robot (ie: rotated over 180
+                 degrees)
+      -->
+    <origin rpy="0 0 -3.14159265" xyz="0 0 0"/>
+    <parent link="${arm_prefix}base_link"/>
+    <child link="base"/>
+  </joint>
+
+
+<link name="tool0"/>
+  <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
+    <origin rpy="-1.570796326795 0 0" xyz="0 0.0823 0"/>
+    <parent link="wrist_3_link"/>
+    <child link="tool0"/>
+  </joint>
+
+
+ <!-- ========================================== -->
+
+  <!-- force torque sensor (robotiq) -->
+
+  <link name="fts_robotside">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.65"/>
+      <inertia ixx="0.000661171875" ixy="0" ixz="0" iyy="0.000661171875" iyz="0" izz="0.00117"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 3.1415926535898 -1.570796326795" xyz="0 0 0.0375"/>
+      <geometry>
+        <mesh filename="package://xamla_egomo/meshes/robotiq-ft300/visual/ft300.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 3.1415926535898 -1.570796326795" xyz="0 0 0.0375"/>
+      <geometry>
+        <mesh filename="package://xamla_egomo/meshes/robotiq-ft300/collision/ft300.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <!-- virtual measurement frame -->
+  <joint name="measurment_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.01625"/>
+    <parent link="fts_robotside"/>
+    <child link="robotiq_force_torque_frame_id"/>
+  </joint>
+  <link name="robotiq_force_torque_frame_id"/>
+  
+  <!-- toolside frame -->
+  <joint name="toolside_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.0375"/>
+    <parent link="fts_robotside"/>
+    <child link="fts_toolside"/>
+  </joint>
+  <link name="fts_toolside"/>
+
+ <!-- ========================================== -->
+ 
+  <link name="camera_robotside">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://xamla_egomo/meshes/egomo-1/visual/egomo-1.dae"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://xamla_egomo/meshes/egomo-1/collision/egomo-1.stl"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Mount the force torque sensor (fts) to the robot -->
+
+  <joint name="fts_to_robot" type="fixed" >
+    <parent link="tool0" />
+    <child link="fts_robotside" />
+    <origin xyz="0 0 0.011" rpy="0 0 0" />
+  </joint>
+
+  <!-- Mount the cameras to the robot -->
+
+  <joint name="camera_to_robot" type="fixed" >
+    <parent link="tool0" />
+    <child link="camera_robotside" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint> 
+
+
+  <!-- ========================================== -->
+	
+	<!-- end of arm workcell joint definitions-->
+    <xacro:robotiq_85_gripper prefix="" parent="fts_toolside" >
+	<origin xyz="0.0 0 0.0109" rpy="0 -${pi/2} ${pi/2}"/>
+    </xacro:robotiq_85_gripper>
+
+
+
+</robot>
