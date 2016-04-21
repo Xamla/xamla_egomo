@@ -245,13 +245,13 @@ local function init()
 
   -- Gripper --
   add_commands_for_gripper()
-  gripper_spec = ros.MsgSpec('xamla_egomo/XamlaGripper')
+  gripper_spec = ros.MsgSpec('egomo_msgs/XamlaGripper')
   publisher_gripper= nodehandle:advertise("XamlaGripper", gripper_spec)
 
-  send_set_command_spec = ros.SrvSpec('xamla_egomo/SendGripperSetCommand')
+  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendGripperSetCommand')
 
   service_queue = ros.CallbackQueue()
-  service = nodehandle:advertiseService('xamla_egomo/SendGripperSetCommand', send_set_command_spec, service_queue, send_set_command_handler)
+  service = nodehandle:advertiseService('egomo_msgs/SendGripperSetCommand', send_set_command_spec, service_queue, send_set_command_handler)
 
   -- Force Torque --
   add_commands_for_force_torque()
@@ -403,7 +403,7 @@ local function build_xamla_message(type)
 
   -- Initialize components based on type
   if type == GRIPPER then
-    message = ros.Message('xamla_egomo/XamlaGripper')
+    message = ros.Message('egomo_msgs/XamlaGripper')
     MESSAGE_PARAMETERS = 4 -- table.getn(message.spec.fields) TODO: geht nicht mehr bei Verschachtelung
     used_command_list = commands_for_gripper
     used_publisher = publisher_gripper
@@ -418,7 +418,7 @@ local function build_xamla_message(type)
     used_command_list = commands_for_imu
     used_publisher = publisher_imu
   end
-  
+
   message.header.frame_id = "ee_link"
 
   while true do
@@ -553,7 +553,7 @@ local function read()
     if file_descriptor == nil or file_descriptor == -1 then
       init_file_descriptor(device, false)
     end
-    
+
     local buffer, err = posix.read(file_descriptor, chunk_size)
 
     if err ~= nil then
@@ -565,7 +565,7 @@ local function read()
         ros.DEBUG("No data available to read! " ..  err)
       end
     end
-    
+
     if buffer ~= nil and string.len(buffer) > 0 then
 
       -- Does read data contains any newline
@@ -657,7 +657,8 @@ local function run()
   init_file_descriptor(device, false)
 
   while true do
-    if not ros.ok() then
+    if not ros.ok() or not ros.master.check() then -- TODO: Reconnect on master breakdown
+      node_has_been_stopped = true
       return
     end
 
@@ -728,4 +729,5 @@ end
 
 init()
 run()
+
 ros.shutdown()
