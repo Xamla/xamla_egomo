@@ -145,7 +145,6 @@ local function add_commands_for_imu()
   }
 end
 
-
 -- This function searches for devices in order to get possible paths for read/write
 
 -- Input:
@@ -658,7 +657,6 @@ local function run()
 
   while true do
     if not ros.ok() or not ros.master.check() then -- TODO: Reconnect on master breakdown
-      node_has_been_stopped = true
       return
     end
 
