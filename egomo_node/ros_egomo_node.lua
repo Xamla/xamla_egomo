@@ -95,8 +95,11 @@ local file_descriptor = nil
 
 local debug = true
 
+local is_reconnected = false -- Is used in init() function and in run()
+
 -- Buffer for data which are supposed to be written to file/device
 local write_buffer = {}
+local write_buffer_max_lenght = 1024
 -- Buffer for data which have been read from the file/device
 local read_buffer = {}
 
@@ -237,15 +240,28 @@ end
 
 -- Function in order to do initialization used components (e.g. Services)
 local function init()
-  ros.init('xamla_egomo')
+
+  if not is_reconnected then
+    ros.init('xamla_egomo')
+  else
+    publisher_gripper:shutdown()
+    publisher_force_torque:shutdown()
+    publisher_imu:shutdown()
+    service:shutdown()
+    nodehandle:shutdown()
+    spinner:stop()
+    ros.init('xamla_egomo')
+  end
+
   spinner = ros.AsyncSpinner()
   spinner:start()
+
   nodehandle = ros.NodeHandle()
 
   -- Gripper --
   add_commands_for_gripper()
   gripper_spec = ros.MsgSpec('egomo_msgs/XamlaGripper')
-  publisher_gripper= nodehandle:advertise("XamlaGripper", gripper_spec)
+  publisher_gripper = nodehandle:advertise("XamlaGripper", gripper_spec)
 
   send_set_command_spec = ros.SrvSpec('egomo_msgs/SendGripperSetCommand')
 
@@ -375,16 +391,16 @@ local function parse_data(line, commands, blacklist) -- TODO: Konzept mit blackl
   return nil
 end
 
-local function type_to_string(type)
+local function type_to_string(type) -- TODO - als table
   if type == GRIPPER then
     return "GRIPPER"
-  elseif type == FORCE_TORQUE then
-    return "FORCE_TORQUE"
-  elseif type == IMU then
-    return "IMU"
-  else
-    return "ERROR: UNKNOWN TYPE!"
-  end
+elseif type == FORCE_TORQUE then
+  return "FORCE_TORQUE"
+elseif type == IMU then
+  return "IMU"
+else
+  return "ERROR: UNKNOWN TYPE!"
+end
 end
 
 -- This function is responsible for creating and publishing the messages based on the read data
@@ -486,6 +502,7 @@ local function init_file_descriptor(device, error_on_read_write)
     if file_descriptor == nil or file_descriptor == -1 or error_on_read_write then
       if file_descriptor ~= nil and file_descriptor ~= -1 then
         posix.close(file_descriptor)
+        -- filedes = nil
       end
       -- Run through all devices and try to open it
       for i, v in ipairs(devices) do
@@ -527,14 +544,39 @@ local function write()
       ros.DEBUG("WRITER: nothing to write yield now")
       coroutine.yield()
     else
+      local not_written_elements = {}
       for i,v in ipairs(write_buffer) do
         local bytes_written, err  = posix.write(file_descriptor, v)
+        --[[
+        if bytes_written ~= nil and bytes_written ~= string.len(v) then -- TODO: Remove only for testing!!!
+          for i=1,100000 do
+            print(string.len(v))
+            print(bytes_written)
+            print(err)
+            print("unready")
+          end
+        end
+        ]]
         if err ~= nil then
-          ros.ERROR("Writing data failed! Error: " ..  err)
-          init_file_descriptor(device, true)
+          not_written_elements[#not_written_elements+1] = v
+          if err ~= "Resource temporarily unavailable" then
+            ros.ERROR("Could not write data! " ..  err)
+            init_file_descriptor(device, true)
+          else
+            ros.DEBUG("Could not write data! " ..  err)
+          end
+          -- elseif bytes_written ~= nil and bytes_written ~= string.len(v) then
+          -- not_written_elements[#not_written_elements+1] = v
         end
       end
-      write_buffer = {}
+      --write_buffer = {}
+
+      write_buffer = not_written_elements
+      if #write_buffer > write_buffer_max_lenght then
+        write_buffer = {}
+        ros.ERROR("WRITER: Write buffer has more than " .. write_buffer_max_lenght .. " elements and was cleared now")
+      end
+      --]]
       ros.DEBUG("WRITER: job done yield now")
       coroutine.yield()
     end
@@ -565,12 +607,12 @@ local function read()
       end
     end
 
-    if buffer ~= nil and string.len(buffer) > 0 then
+    if buffer ~= nil and #buffer > 0 then
 
       -- Does read data contains any newline
       local data_contains_any_linebreak = string.match(buffer,"\n")
       -- Is the last read byte a newline
-      local last_byte_is_new_line = string.match(string.sub(buffer, string.len(buffer), string.len(buffer)),"\n")
+      local last_byte_is_new_line = string.match(string.sub(buffer, string.len(buffer), string.len(buffer)),"\n") -- a:byte(-1) letztes Zeichen
       local first_byte_is_new_line = string.match(string.sub(buffer, 1, 1),"\n")
       local all_lines_complete = false
       if data_contains_any_linebreak ~= nil and last_byte_is_new_line ~= nil then
@@ -611,7 +653,7 @@ local function read()
       end
 
       ros.DEBUG("READER: job done yield now")
-      -- coroutine.yield() -- DISCUSSION: Should the function read all data or yield after each chunck?
+      -- coroutine.yield() neccesarry when device is sending data continously
     else
       ros.DEBUG("READER: job unfinished yield now")
       coroutine.yield()
@@ -639,11 +681,11 @@ local function message_creation()
       xamla_gripper_worker = coroutine.create(build_xamla_message)
     end
 
-    if coroutine.status(xamla_ft_worker) == "dead" then
+    if coroutine.status(xamla_ft_worker) == "dead"  then
       xamla_ft_worker = coroutine.create(build_xamla_message)
     end
 
-    if coroutine.status(xamla_imu_worker) == "dead" then
+    if coroutine.status(xamla_imu_worker) == "dead"  then
       xamla_imu_worker = coroutine.create(build_xamla_message)
     end
   end
@@ -656,8 +698,17 @@ local function run()
   init_file_descriptor(device, false)
 
   while true do
-    if not ros.ok() or not ros.master.check() then -- TODO: Reconnect on master breakdown
+    if not ros.ok() then -- TODO: Reconnect on master breakdown
       return
+    end
+
+    if not ros.master.check() then
+      while not ros.master.check() do
+        sys.sleep(1)
+        print("Master down")
+      end
+      is_reconnected = true
+      init()
     end
 
     if not service_queue:isEmpty() then
@@ -698,6 +749,11 @@ local function run()
 
     coroutine.resume(write_worker)
     coroutine.resume(reader_worker)
+
+    if is_reconnected then
+      message_worker = coroutine.create(message_creation)
+      is_reconnected = false
+    end
     coroutine.resume(message_worker)
 
     if debug then
@@ -719,8 +775,9 @@ local function run()
     if coroutine.status(message_worker) == "dead" then
       message_worker = coroutine.create(message_creation)
     end
-
-    sys.sleep(0.1)
+    -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
+    -- May increase this value when more messages are added
+    sys.sleep(0.005)
     ros.spinOnce()
   end
 end
