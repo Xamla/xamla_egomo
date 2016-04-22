@@ -28,11 +28,11 @@ wrench   | [geometry_msgs/Wrench](http://docs.ros.org/jade/api/geometry_msgs/htm
 
 ### Topic XamlaIOIMU ###
 
-Gives information about the inertial measurement unit (IMU) using AccelStamped. For example subscribe with "rostopic echo /XamlaIOIMU" typing into your terminal.
+Gives information about the inertial measurement unit (IMU) using [AccelStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/AccelStamped.html). For example subscribe with "rostopic echo /XamlaIOIMU" typing into your terminal.
 
 Published data | type
 ---------|-----------
 header   | [std_msgs/header](http://docs.ros.org/jade/api/std_msgs/html/msg/Header.html)
-accel   | geometry_msgs/Accel
+accel   | [geometry_msgs/Accel](http://docs.ros.org/jade/api/geometry_msgs/html/msg/Accel.html)
 
 ### Service SendGripperSetCommand ###
