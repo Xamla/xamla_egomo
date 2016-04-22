@@ -53,5 +53,5 @@ pos_cmd | 0-255 | Moves the gripper to the position
 
 Notice that you should reset the gripper before use. While initializing the gripper moves. Here are two examples of valid calls of the service from the terminal.
 
-        rosservice call /egomo_msgs/SendGripperSetCommand "reset" 0
-        rosservice call /egomo_msgs/SendGripperSetCommand "pos_cmd" 127
+    rosservice call /egomo_msgs/SendGripperSetCommand "reset" 0
+    rosservice call /egomo_msgs/SendGripperSetCommand "pos_cmd" 127
