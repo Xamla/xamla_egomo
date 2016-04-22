@@ -2,7 +2,7 @@
 
 ## General Information ##
 
-This node is supposed to be executed on the Raspberry PI and offers a ros-service for sending commands to the gripper. Furthermore different topics are offered in order to get information about the gripper, force torque (FT) and inertial measurement unit (IMU).
+This node is supposed to be executed on the Raspberry Pi and offers a ros-service for sending commands to the gripper. Furthermore different topics are offered in order to get information about the gripper, force torque (FT) and inertial measurement unit (IMU).
 
 ### Topic XamlaGripper ###
 
@@ -55,3 +55,8 @@ Notice that you should reset the gripper before use. While initializing the grip
 
     rosservice call /egomo_msgs/SendGripperSetCommand "reset" 0
     rosservice call /egomo_msgs/SendGripperSetCommand "pos_cmd" 127
+    
+## Troubleshooting FAQ
+
+ - Q1: I get the error "No device could be found!!!".
+ - A1: The IO-Board connected the the Raspberry Pi could not be found. Make sure that it is connected properly. Usually the IO-Board should be recognized by the Raspberry Pi as a device /dev/ttyACM0 or any other number.
