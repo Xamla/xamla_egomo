@@ -2,7 +2,7 @@
 
 ## General Information ##
 
-This node is supposed to be executed on the Rasperri PI and offers a ros-service for sending commands to the gripper. Furtheremore different topics are offered in order to get information about the gripper, force torque (FT) and inertial measurement unit (IMU).
+This node is supposed to be executed on the Raspberry PI and offers a ros-service for sending commands to the gripper. Furthermore different topics are offered in order to get information about the gripper, force torque (FT) and inertial measurement unit (IMU).
 
 ### Topic XamlaGripper ###
 
