@@ -6,8 +6,9 @@ This node is supposed to be executed on the Rasperri PI and offers a ros-service
 
 ### Topic XamlaGripper ###
 
-Gives information about the gripper. For example subscribe with "rostopic echo /XamlaGripper" typing into your terminal.
-For publishing data an own message was created ([XamlaGripper.msg](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/msg))
+Gives information about the gripper. For publishing data an own message was created ([XamlaGripper.msg](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/msg)). Subscribe by typing the following in your terminal:
+
+    rostopic echo /XamlaGripper
 
 Published data | type
 ---------|-----------
@@ -19,7 +20,9 @@ pos_fb | float32
 
 ### Topic XamlaForceTorque ###
 
-Gives information about the force torque sensor using [WrenchStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/WrenchStamped.html). For example subscribe with "rostopic echo /XamlaForceTorque" typing into your terminal.
+Gives information about the force torque sensor using [WrenchStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/WrenchStamped.html). Subscribe by typing the following in your terminal: 
+
+    rostopic echo /XamlaForceTorque
 
 Published data | type
 ---------|-----------
@@ -28,7 +31,9 @@ wrench   | [geometry_msgs/Wrench](http://docs.ros.org/jade/api/geometry_msgs/htm
 
 ### Topic XamlaIOIMU ###
 
-Gives information about the inertial measurement unit (IMU) using [AccelStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/AccelStamped.html). For example subscribe with "rostopic echo /XamlaIOIMU" typing into your terminal.
+Gives information about the inertial measurement unit (IMU) using [AccelStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/AccelStamped.html). Subscribe by typing the following in your terminal: 
+
+    rostopic echo /XamlaIOIMU
 
 Published data | type
 ---------|-----------
