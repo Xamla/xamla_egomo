@@ -450,10 +450,10 @@ local function build_xamla_message(type)
       seq = seq + 1
       blacklist = {}
       numberOfSetParameters = 0
-      ros.DEBUG("XAMLA_" .. types_string(type) .. ": Message send yield now")
+      ros.DEBUG("XAMLA_" .. types_string[type] .. ": Message send yield now")
       coroutine.yield()
     else
-      ros.DEBUG("XAMLA_" .. types_string(type) .. ": Message unfinished yield now")
+      ros.DEBUG("XAMLA_" .. types_string[type] .. ": Message unfinished yield now")
       coroutine.yield()
     end
   end
@@ -666,14 +666,17 @@ local function message_creation()
 
     -- Create new coroutine in case coroutine died
     if coroutine.status(xamla_gripper_worker) == "dead" then
+      ros.WARN("GRIPPER WORKER died and will be reinitialized")
       xamla_gripper_worker = coroutine.create(build_xamla_message)
     end
 
     if coroutine.status(xamla_ft_worker) == "dead"  then
+      ros.WARN("FORCE TORQUE WORKER died and will be reinitialized")
       xamla_ft_worker = coroutine.create(build_xamla_message)
     end
 
     if coroutine.status(xamla_imu_worker) == "dead"  then
+      ros.WARN("IMU WORKER died and will be reinitialized")
       xamla_imu_worker = coroutine.create(build_xamla_message)
     end
   end
@@ -755,12 +758,15 @@ local function run()
     read_buffer = {}
 
     if coroutine.status(write_worker) == "dead" then
+      ros.WARN("WRITER WORKER died and will be reinitialized")
       write_worker = coroutine.create(write)
     end
     if coroutine.status(reader_worker) == "dead" then
+      ros.WARN("READER WORKER died and will be reinitialized")
       reader_worker = coroutine.create(read)
     end
     if coroutine.status(message_worker) == "dead" then
+      ros.WARN("MESSAGE WORKER died and will be reinitialized")
       message_worker = coroutine.create(message_creation)
     end
     -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
