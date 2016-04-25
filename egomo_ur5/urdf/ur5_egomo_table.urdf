@@ -26,10 +26,80 @@
     </plugin>
 -->
   </gazebo>
+
+
+<property name="pi" value="3.1415926535898" />
+
+  <!-- Inertia parameters -->
+  <property name="base_mass" value="4.0" />  <!-- This mass might be incorrect -->
+  <property name="shoulder_mass" value="3.7000" />
+  <property name="upper_arm_mass" value="8.3930" />
+  <property name="forearm_mass" value="2.2750" />
+  <property name="wrist_1_mass" value="1.2190" />
+  <property name="wrist_2_mass" value="1.2190" />
+  <property name="wrist_3_mass" value="0.1879" />
+
+  <property name="shoulder_cog" value="0.0 0.00193 -0.02561" />
+  <property name="upper_arm_cog" value="0.0 -0.024201 0.2125" />
+  <property name="forearm_cog" value="0.0 0.0265 0.11993" />
+  <property name="wrist_1_cog" value="0.0 0.110949 0.01634" />
+  <property name="wrist_2_cog" value="0.0 0.0018 0.11099" />
+  <property name="wrist_3_cog" value="0.0 0.001159 0.0" />
+
+  <!-- Kinematic model -->
+  <!-- Properties from urcontrol.conf -->
+  <!--
+    DH for UR5:
+    a = [0.00000, -0.42500, -0.39225,  0.00000,  0.00000,  0.0000]
+    d = [0.089159,  0.00000,  0.00000,  0.10915,  0.09465,  0.0823]
+    alpha = [ 1.570796327, 0, 0, 1.570796327, -1.570796327, 0 ]
+    q_home_offset = [0, -1.570796327, 0, -1.570796327, 0, 0]
+    joint_direction = [-1, -1, 1, 1, 1, 1]
+    mass = [3.7000, 8.3930, 2.2750, 1.2190, 1.2190, 0.1879]
+    center_of_mass = [ [0, -0.02561, 0.00193], [0.2125, 0, 0.11336], [0.11993, 0.0, 0.0265], [0, -0.0018, 0.01634], [0, 0.0018,0.01634], [0, 0, -0.001159] ]
+  -->
+  <property name="ur5_d1" value="0.089159" />
+  <property name="ur5_a2" value="-0.42500" />
+  <property name="ur5_a3" value="-0.39225" />
+  <property name="ur5_d4" value="0.10915" />
+  <property name="ur5_d5" value="0.09465" />
+  <property name="ur5_d6" value="0.0823" />
+
+  <!-- Arbitrary offsets for shoulder/elbow joints -->
+  <property name="shoulder_offset" value="0.13585" />  <!-- measured from model -->
+  <property name="elbow_offset" value="-0.1197" /> <!-- measured from model -->
+
+  <!-- link lengths used in model -->
+  <property name="shoulder_height" value="${ur5_d1}" />
+  <property name="upper_arm_length" value="${-ur5_a2}" />
+  <property name="forearm_length" value="${-ur5_a3}" />
+  <property name="wrist_1_length" value="${ur5_d4 - elbow_offset - shoulder_offset}" />
+  <property name="wrist_2_length" value="${ur5_d5}" />
+  <property name="wrist_3_length" value="${ur5_d6}" />
+  <!--property name="shoulder_height" value="0.089159" /-->
+  <!--property name="shoulder_offset" value="0.13585" /-->  <!-- shoulder_offset - elbow_offset + wrist_1_length = 0.10915 -->
+  <!--property name="upper_arm_length" value="0.42500" /-->
+  <!--property name="elbow_offset" value="0.1197" /-->       <!-- CAD measured -->
+  <!--property name="forearm_length" value="0.39225" /-->
+  <!--property name="wrist_1_length" value="0.093" /-->     <!-- CAD measured -->
+  <!--property name="wrist_2_length" value="0.09465" /-->   <!-- In CAD this distance is 0.930, but in the spec it is 0.09465 -->
+  <!--property name="wrist_3_length" value="0.0823" /-->
+
+  <property name="shoulder_radius" value="0.060" />   <!-- manually measured -->
+  <property name="upper_arm_radius" value="0.054" />  <!-- manually measured -->
+  <property name="elbow_radius" value="0.060" />      <!-- manually measured -->
+  <property name="forearm_radius" value="0.040" />    <!-- manually measured -->
+  <property name="wrist_radius" value="0.045" />      <!-- manually measured -->
+
+
+
+
+
+
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/base.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/base.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -37,7 +107,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/base.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/base.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -50,7 +120,7 @@
     <parent link="base_link"/>
     <child link="shoulder_link"/>
 
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.089159"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 ${shoulder_height}"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
 
     <axis xyz="0 0 1"/>
     <limit effort="150.0" lower="-3.14159265" upper="3.14159265" velocity="3.15"/>
@@ -59,7 +129,7 @@
   <link name="shoulder_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/shoulder.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/shoulder.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -67,7 +137,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/shoulder.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/shoulder.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -87,7 +157,7 @@
   <link name="upper_arm_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/upper_arm.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/upper_arm.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -95,7 +165,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/upper_arm.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/upper_arm.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -107,7 +177,8 @@
   <joint name="elbow_joint" type="revolute">
     <parent link="upper_arm_link"/>
     <child link="forearm_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 -0.1197 0.425"/>
+    <origin xyz="0.0 ${elbow_offset} ${upper_arm_length}" rpy="0.0 0.0 0.0" />
+<!--origin rpy="0.0 0.0 0.0" xyz="0.0 -0.1197 0.425"/-->
     <axis xyz="0 1 0"/>
     <limit effort="150.0" lower="-3" upper="3" velocity="3.15"/> <!-- +/- 175 deg -->
     <dynamics damping="0.0" friction="0.0"/>
@@ -115,7 +186,7 @@
   <link name="forearm_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/forearm.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/forearm.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -123,7 +194,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/forearm.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/forearm.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -135,7 +206,8 @@
   <joint name="wrist_1_joint" type="revolute">
     <parent link="forearm_link"/>
     <child link="wrist_1_link"/>
-    <origin rpy="0.0 1.570796326795 0.0" xyz="0.0 0.0 0.39225"/>
+    <origin xyz="0.0 0.0 ${forearm_length}" rpy="0.0 ${pi / 2.0} 0.0" />
+    <!--origin rpy="0.0 1.570796326795 0.0" xyz="0.0 0.0 0.39225"/-->
     <axis xyz="0 1 0"/>
     <limit effort="28.0" lower="-3.92" upper="0.78" velocity="3.2"/><!-- -225 deg to 45 deg -->
     <dynamics damping="0.0" friction="0.0"/>
@@ -143,7 +215,7 @@
   <link name="wrist_1_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/wrist_1.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/wrist_1.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -151,7 +223,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/wrist_1.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/wrist_1.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -163,7 +235,8 @@
   <joint name="wrist_2_joint" type="revolute">
     <parent link="wrist_1_link"/>
     <child link="wrist_2_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.093 0.0"/>
+    <!--origin rpy="0.0 0.0 0.0" xyz="0.0 0.093 0.0"/-->
+      <origin xyz="0.0 ${wrist_1_length} 0.0" rpy="0.0 0.0 0.0" />
     <axis xyz="0 0 1"/>
     <limit effort="28.0" lower="-3.1415926535898" upper="3.1415926535898" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
@@ -171,7 +244,7 @@
   <link name="wrist_2_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/wrist_2.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/wrist_2.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -179,7 +252,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/wrist_2.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/wrist_2.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -191,7 +264,8 @@
   <joint name="wrist_3_joint" type="revolute">
     <parent link="wrist_2_link"/>
     <child link="wrist_3_link"/>
-    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.09465"/>
+    <!--origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.09465"/-->
+      <origin xyz="0.0 0.0 ${wrist_2_length}" rpy="0.0 0.0 0.0" />
     <axis xyz="0 1 0"/>
     <limit effort="28.0" lower="-3.1415926535898" upper="3.1415926535898" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
@@ -199,7 +273,7 @@
   <link name="wrist_3_link">
     <visual>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/visual/wrist_3.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/visual/wrist_3.dae"/>
       </geometry>
       <material name="LightGrey">
         <color rgba="0.7 0.7 0.7 1.0"/>
@@ -207,7 +281,7 @@
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/ur5/collision/wrist_3.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/ur5/collision/wrist_3.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -219,7 +293,8 @@
   <joint name="ee_fixed_joint" type="fixed">
     <parent link="wrist_3_link"/>
     <child link="ee_link"/>
-    <origin rpy="-1.570796326795 0.0 0" xyz="0.0 0.0823 0.0"/>
+    <!--origin rpy="-1.570796326795 0.0 0" xyz="0.0 0.0823 0.0"/-->
+    <origin xyz="0.0 ${wrist_3_length} 0.0" rpy="-1.570796326795 0.0 0" />
   </joint>
   <link name="ee_link">
     <collision>
@@ -321,13 +396,13 @@
     <visual>
       <origin rpy="0 3.1415926535898 -1.570796326795" xyz="0 0 0.0375"/>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/robotiq-ft300/visual/ft300.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/robotiq-ft300/visual/ft300.dae"/>
       </geometry>
     </visual>
     <collision>
       <origin rpy="0 3.1415926535898 -1.570796326795" xyz="0 0 0.0375"/>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/robotiq-ft300/collision/ft300.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/robotiq-ft300/collision/ft300.stl"/>
       </geometry>
     </collision>
   </link>
@@ -354,7 +429,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/egomo-1/visual/egomo-1.dae"/>
+        <mesh filename="package://egomo_ur5/meshes/egomo-1/visual/egomo-1.dae"/>
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1"/>
@@ -363,7 +438,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="package://xamla_egomo/meshes/egomo-1/collision/egomo-1.stl"/>
+        <mesh filename="package://egomo_ur5/meshes/egomo-1/collision/egomo-1.stl"/>
       </geometry>
     </collision>
   </link>
@@ -390,13 +465,13 @@
 <link name="robotiq_85_coupling">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_coupling.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_coupling.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0 0 0"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_coupling.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_coupling.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0 0 0"/>
   </collision>
@@ -411,13 +486,13 @@
 <link name="robotiq_85_base">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_base.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_base.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0 0 0"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_base.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_base.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0 0 0"/>
   </collision>
@@ -426,13 +501,13 @@
 <link name="robotiq_85_finger_right_1">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_1.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_right_1.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0305864 0 -0.0549191"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_1.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_right_1.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0305864 0 -0.0549191"/>
   </collision>
@@ -441,13 +516,13 @@
 <link name="robotiq_85_finger_right_2">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_2.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_right_2.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0621231 0 -0.0511592"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_2.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_right_2.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0621231 0 -0.0511592"/>
   </collision>
@@ -456,13 +531,13 @@
 <link name="robotiq_85_finger_right_3">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_3.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_right_3.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0127161 0 -0.0613987"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_3.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_right_3.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0127161 0 -0.0613987"/>
   </collision>
@@ -471,13 +546,13 @@
 <link name="robotiq_85_finger_right_4">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_right_4.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_right_4.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0498492 0 -0.1048415"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_right_4.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_right_4.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="0.0498492 0 -0.1048415"/>
   </collision>
@@ -486,13 +561,13 @@
 <link name="robotiq_85_finger_left_1">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_1.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_left_1.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0305864 0 -0.0549191"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_1.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_left_1.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0305864 0 -0.0549191"/>
   </collision>
@@ -501,13 +576,13 @@
 <link name="robotiq_85_finger_left_2">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_2.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_left_2.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0621231 0 -0.0511592"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_2.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_left_2.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0621231 0 -0.0511592"/>
   </collision>
@@ -516,13 +591,13 @@
 <link name="robotiq_85_finger_left_3">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_3.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_left_3.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0127161 0 -0.0613987"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_3.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_left_3.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0127161 0 -0.0613987"/>
   </collision>
@@ -531,13 +606,13 @@
 <link name="robotiq_85_finger_left_4">
   <visual>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/visual/gripper_finger_left_4.dae"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/visual/gripper_finger_left_4.dae"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0498492 0 -0.1048415"/>
   </visual>
   <collision>
     <geometry>
-      <mesh filename="package://xamla_egomo/meshes/robotiq-2-finger-85/collision/gripper_finger_left_4.stl"/>
+      <mesh filename="package://egomo_ur5/meshes/robotiq-2-finger-85/collision/gripper_finger_left_4.stl"/>
     </geometry>
     <origin rpy="0 0 3.1415926535898" xyz="-0.0498492 0 -0.1048415"/>
   </collision>
