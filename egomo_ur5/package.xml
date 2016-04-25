@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>xamla_egomo</name>
+  <name>egomo_ur5</name>
   <version>1.0.0</version>
   <description>
       URDF description of Xamla egomo sensorhead on Universal UR5

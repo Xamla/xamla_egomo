@@ -17,7 +17,7 @@
   <arg name="tool_frame" default="$(arg prefix)tool0_controller" />
 
     <!-- send robot urdf to param server -->
-  <include file="$(find xamla_egomo)/launch/ur5_description.launch"/>
+  <include file="$(find egomo_ur5)/launch/ur5_description.launch"/>
 
 
 
@@ -52,7 +52,7 @@
   </node>
 
   <!--start controllers -->
-  <include file="$(find xamla_egomo)/launch/controller_utils.launch">  </include>  
+  <include file="$(find egomo_ur5)/launch/controller_utils.launch">  </include>  
 
 
 
