@@ -58,12 +58,45 @@
     mass = [3.7000, 8.3930, 2.2750, 1.2190, 1.2190, 0.1879]
     center_of_mass = [ [0, -0.02561, 0.00193], [0.2125, 0, 0.11336], [0.11993, 0.0, 0.0265], [0, -0.0018, 0.01634], [0, 0.0018,0.01634], [0, 0, -0.001159] ]
   -->
+
+  <property name="q_home_offset_1" value="0.0" />
   <property name="ur5_d1" value="0.089159" />
+  <property name="ur5_a1" value="0.0" />
+  <property name="alpha_1" value="${pi/2}" />
+  
+
+  <property name="q_home_offset_2" value="-${pi/2}" />
+  <property name="ur5_d2" value="0.0" />
   <property name="ur5_a2" value="-0.42500" />
+  <property name="alpha_2" value="0.0" />
+  
+  <property name="q_home_offset_3" value="0.0" />
+  <property name="ur5_d3" value="0.0" />
   <property name="ur5_a3" value="-0.39225" />
+  <property name="alpha_3" value="0.0" />
+  
+  <property name="q_home_offset_4" value="-${pi/2}" />
   <property name="ur5_d4" value="0.10915" />
+  <property name="ur5_a4" value="0.0" />
+  <property name="alpha_4" value="${pi/2}" />
+
+  <property name="q_home_offset_5" value="0.0" />
   <property name="ur5_d5" value="0.09465" />
+  <property name="ur5_a5" value="0.0" />
+  <property name="alpha_5" value="-${pi/2}" />
+
+  <property name="q_home_offset_6" value="0.0" />
   <property name="ur5_d6" value="0.0823" />
+  <property name="ur5_a6" value="0.0" />
+  <property name="alpha_6" value="0.0" />
+
+<!--Joint 0(theta, d, a, alpha)-0.00371039 0.0958959 -0.00194819 1.57275
+Joint 1(theta, d, a, alpha)-0.0309971 -0.000454111 0.421472 0.000740345
+Joint 2(theta, d, a, alpha)0.00469988 -0.000462854 0.390623 -0.0110371
+Joint 3(theta, d, a, alpha)0.00031729 -0.109632 0.00326656 1.56457
+Joint 4(theta, d, a, alpha)0.0012977 0.0935537 -0.00195301 -1.5639
+Joint 5(theta, d, a, alpha)3.14159 -0.0800224 0.00554286 3.14034-->
+
 
   <!-- Arbitrary offsets for shoulder/elbow joints -->
   <property name="shoulder_offset" value="0.13585" />  <!-- measured from model -->
