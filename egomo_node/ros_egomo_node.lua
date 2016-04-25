@@ -93,7 +93,7 @@ local IMU = 3
 
 local file_descriptor = nil
 
-local debug = true
+local debug = false
 
 local is_reconnected = false -- Is used in init() function and in run()
 
@@ -104,6 +104,14 @@ local write_buffer_max_lenght = 1024
 local read_buffer = {}
 
 local device = "/dev/ttyACM0"
+
+local types_string = {"GRIPPER", "FORCE_TORQUE", "IMU"}
+
+local char_byte_table = {
+  ["\n"] = string.byte("\n"),
+  ["K"] = string.byte("K"),
+  ["O"] = string.byte("O")
+}
 
 -- Add all commands for the gripper to a table: Is used in order to fill the message
 local function add_commands_for_gripper()
@@ -149,7 +157,6 @@ local function add_commands_for_imu()
 end
 
 -- This function searches for devices in order to get possible paths for read/write
-
 -- Input:
 --  id_vendor - The vendor id of the desired device
 --  id_prdocut - The product id of the desired device
@@ -166,7 +173,7 @@ local function find_tty_acm(id_vendor, id_product)
     return ln
   end
 
-  function starts_with(string, start)
+  local function starts_with(string, start)
     return string.sub(string, 1, #start) == start
   end
 
@@ -198,7 +205,6 @@ local function find_tty_acm(id_vendor, id_product)
 end
 
 -- This function searches for egomo devices
-
 -- Output:
 --  devices - Table containing all devices
 local function get_egomo_devices()
@@ -209,7 +215,6 @@ local function get_egomo_devices()
 end
 
 -- This function finds the corresponding command for the service
-
 -- Input:
 --  command - Command which was send from service caller (e.g. "reset")
 --  command_list - List containg commands for search
@@ -280,7 +285,6 @@ local function init()
 end
 
 -- This function assigns the a value to a field of a message (if possible)
-
 -- Input:
 --  message - The message the value is supposed to be assigned to
 --  fieldName - The name of the field to which the value is supposed to be assigned to
@@ -288,62 +292,62 @@ end
 --  type - The type of the message (GRIPPER = 1, FORCETORQUE = 2, IMU = 3)
 -- Output:
 --  true if value was assigned; false otherwise
-local function assign_values_to_message(message, fieldName, value, type)
+local function assign_values_to_message(message, field_name, value, type)
   if type == GRIPPER then
-    if fieldName == GRIPPER_GRIP_FORCE then
+    if field_name == GRIPPER_GRIP_FORCE then
       message.grip_force = value
       return true
-    elseif fieldName == GRIPPER_POS_FB then
+    elseif field_name == GRIPPER_POS_FB then
       message.pos_fb = value
       return true
-    elseif fieldName == GRIPPER_LEFT_FINGER_FORCE then
+    elseif field_name == GRIPPER_LEFT_FINGER_FORCE then
       message.left_finger_force = value
       return true
-    elseif fieldName == GRIPPER_RIGHT_FINGER_FORCE then
+    elseif field_name == GRIPPER_RIGHT_FINGER_FORCE then
       message.right_finger_force = value
       return true
     else
       return false
     end
   elseif type == FORCE_TORQUE then
-    if fieldName == FT_X then
+    if field_name == FT_X then
       message.wrench.force.x = value
       return true
-    elseif fieldName == FT_Y then
+    elseif field_name == FT_Y then
       message.wrench.force.y = value
       return true
-    elseif fieldName == FT_Z then
+    elseif field_name == FT_Z then
       message.wrench.force.z = value
       return true
-    elseif fieldName == FT_A then
+    elseif field_name == FT_A then
       message.wrench.torque.x = value
       return true
-    elseif fieldName == FT_B then
+    elseif field_name == FT_B then
       message.wrench.torque.y = value
       return true
-    elseif fieldName == FT_C then
+    elseif field_name == FT_C then
       message.wrench.torque.z = value
       return true
     else
       return false
     end
   elseif type == IMU then
-    if fieldName == IMU_A then
+    if field_name == IMU_A then
       message.accel.linear.x = value
       return true
-    elseif fieldName == IMU_B then
+    elseif field_name == IMU_B then
       message.accel.linear.y = value
       return true
-    elseif fieldName == IMU_C then
+    elseif field_name == IMU_C then
       message.accel.linear.z = value
       return true
-    elseif fieldName == IMU_DA then
+    elseif field_name == IMU_DA then
       message.accel.angular.x = value
       return true
-    elseif fieldName == IMU_DB then
+    elseif field_name == IMU_DB then
       message.accel.angular.y = value
       return true
-    elseif fieldName == IMU_DC then
+    elseif field_name == IMU_DC then
       message.accel.angular.z = value
       return true
     else
@@ -364,7 +368,6 @@ end
 
 -- This function is used to parse a read line. Returns nil if the
 -- line does not contain a defined command
-
 -- Input:
 --  line - String which will be used to find a specific known command (e.g. "gripper0.pos_fb <= gripper0.pos_fb = 1.004000")
 --  commands - List of commands which are used for comparision
@@ -391,20 +394,7 @@ local function parse_data(line, commands, blacklist) -- TODO: Konzept mit blackl
   return nil
 end
 
-local function type_to_string(type) -- TODO - als table
-  if type == GRIPPER then
-    return "GRIPPER"
-elseif type == FORCE_TORQUE then
-  return "FORCE_TORQUE"
-elseif type == IMU then
-  return "IMU"
-else
-  return "ERROR: UNKNOWN TYPE!"
-end
-end
-
 -- This function is responsible for creating and publishing the messages based on the read data
-
 -- Input:
 --  type - Defines the type of the message (e.g. GRIPPER, FORCE_TORQUE, IMU)
 local function build_xamla_message(type)
@@ -419,17 +409,17 @@ local function build_xamla_message(type)
   -- Initialize components based on type
   if type == GRIPPER then
     message = ros.Message('egomo_msgs/XamlaGripper')
-    MESSAGE_PARAMETERS = 4 -- table.getn(message.spec.fields) TODO: geht nicht mehr bei Verschachtelung
+    MESSAGE_PARAMETERS = 4
     used_command_list = commands_for_gripper
     used_publisher = publisher_gripper
   elseif type == FORCE_TORQUE then
     message = ros.Message('geometry_msgs/WrenchStamped')
-    MESSAGE_PARAMETERS = 6 -- table.getn(message.spec.fields)
+    MESSAGE_PARAMETERS = 6
     used_command_list = commands_for_force_torque
     used_publisher = publisher_force_torque
   elseif type == IMU then
     message = ros.Message('geometry_msgs/AccelStamped')
-    MESSAGE_PARAMETERS = 6 -- table.getn(message.spec.fields)
+    MESSAGE_PARAMETERS = 6
     used_command_list = commands_for_imu
     used_publisher = publisher_imu
   end
@@ -439,7 +429,7 @@ local function build_xamla_message(type)
   while true do
     for i,line in ipairs(read_buffer) do
       -- Skip line if it is answer of an previous set command
-      if string.match(string.sub(line,1,2),"OK") == nil then
+      if string.byte(line,1) ~= char_byte_table["O"] and string.byte(line,2) ~= char_byte_table["K"] then
         -- Inspect the line and look for corresponding field and value
         local field_name, value = parse_data(line, used_command_list, blacklist)
         if field_name ~= nil and value ~= nil then
@@ -460,10 +450,10 @@ local function build_xamla_message(type)
       seq = seq + 1
       blacklist = {}
       numberOfSetParameters = 0
-      ros.DEBUG("XAMLA_" .. type_to_string(type) .. ": Message send yield now")
+      ros.DEBUG("XAMLA_" .. types_string(type) .. ": Message send yield now")
       coroutine.yield()
     else
-      ros.DEBUG("XAMLA_" .. type_to_string(type) .. ": Message unfinished yield now")
+      ros.DEBUG("XAMLA_" .. types_string(type) .. ": Message unfinished yield now")
       coroutine.yield()
     end
   end
@@ -490,7 +480,6 @@ function enqueue(command, value)
 end
 
 -- This function opens the file/device for reading and writing
-
 -- Input:
 --  device - path or device (e.g. "/dev/ttyACM0")
 local function init_file_descriptor(device, error_on_read_write)
@@ -502,7 +491,7 @@ local function init_file_descriptor(device, error_on_read_write)
     if file_descriptor == nil or file_descriptor == -1 or error_on_read_write then
       if file_descriptor ~= nil and file_descriptor ~= -1 then
         posix.close(file_descriptor)
-        -- filedes = nil
+        file_descriptor = nil
       end
       -- Run through all devices and try to open it
       for i, v in ipairs(devices) do
@@ -524,13 +513,12 @@ local function init_file_descriptor(device, error_on_read_write)
           break
         end
       end
-      if file_descriptor == -1 then
+      if file_descriptor == nil or file_descriptor == -1 then
         ros.ERROR("Could not open file or device for reading and writing")
       end
     end
   else
     ros.ERROR("No device could be found!!!")
-    --print("No device could be found")
   end
 end
 
@@ -584,7 +572,6 @@ local function write()
 end
 
 -- TODO Ggf. übersichtlicher gestalten
-
 -- This function reads from the file/device and stores the data line by line into the read_buffer
 local function read()
   local chunk_size = 4096
@@ -612,10 +599,11 @@ local function read()
       -- Does read data contains any newline
       local data_contains_any_linebreak = string.match(buffer,"\n")
       -- Is the last read byte a newline
-      local last_byte_is_new_line = string.match(string.sub(buffer, string.len(buffer), string.len(buffer)),"\n") -- a:byte(-1) letztes Zeichen
-      local first_byte_is_new_line = string.match(string.sub(buffer, 1, 1),"\n")
+      local last_byte_is_new_line = buffer:byte(-1) == char_byte_table["\n"]
+      local first_byte_is_new_line = buffer:byte(1) == char_byte_table["\n"]
       local all_lines_complete = false
-      if data_contains_any_linebreak ~= nil and last_byte_is_new_line ~= nil then
+      
+      if data_contains_any_linebreak ~= nil and last_byte_is_new_line then
         all_lines_complete = true
       end
 
@@ -623,7 +611,7 @@ local function read()
         -- When there is an incomplete line in local buffer
         if unfinished_line_buffer ~= nil then
           -- When first byte is not "\n" concat strings and write into read_buffer
-          if first_byte_is_new_line == nil then
+          if not first_byte_is_new_line then
             read_buffer[#read_buffer+1] = unfinished_line_buffer .. line
             if data_contains_any_linebreak ~= nil then
               -- clear local buffer in case unfinished line has been completed
@@ -641,7 +629,7 @@ local function read()
       end
 
       -- Only happens when the for loop above is skipped due to that the only byte is "\n"
-      if string.len(buffer) == 1 and buffer == "\n" and unfinished_line_buffer ~= nil then
+      if #buffer == 1 and buffer:byte(1) == char_byte_table["\n"] and unfinished_line_buffer ~= nil then
         read_buffer[#read_buffer+1] = unfinished_line_buffer
         unfinished_line_buffer = nil
       end
@@ -698,14 +686,14 @@ local function run()
   init_file_descriptor(device, false)
 
   while true do
-    if not ros.ok() then -- TODO: Reconnect on master breakdown
+    if not ros.ok() then
       return
     end
 
     if not ros.master.check() then
       while not ros.master.check() do
-        sys.sleep(1)
-        print("Master down")
+        sys.sleep(0.5)
+        print("Master down trying to reconnect...")
       end
       is_reconnected = true
       init()
@@ -719,32 +707,32 @@ local function run()
     if publisher_gripper:getNumSubscribers() == 0 then
       ros.DEBUG('gripper waiting for subscriber')
     else
-      enqueue(GRIPPER_LEFT_FINGER_FORCE, nil)
-      enqueue(GRIPPER_RIGHT_FINGER_FORCE, nil)
-      enqueue(GRIPPER_POS_FB, nil)
-      enqueue(GRIPPER_GRIP_FORCE, nil)
+      enqueue(GRIPPER_LEFT_FINGER_FORCE)
+      enqueue(GRIPPER_RIGHT_FINGER_FORCE)
+      enqueue(GRIPPER_POS_FB)
+      enqueue(GRIPPER_GRIP_FORCE)
     end
 
     if publisher_force_torque:getNumSubscribers() == 0 then -- TODO: Wenn keine Nachricht gesendet wird, dann wird nicht unsubscribed?
       ros.DEBUG('force torque waiting for subscriber')
     else
-      enqueue(FT_X, nil)
-      enqueue(FT_Y, nil)
-      enqueue(FT_Z, nil)
-      enqueue(FT_A, nil)
-      enqueue(FT_B, nil)
-      enqueue(FT_C, nil)
+      enqueue(FT_X)
+      enqueue(FT_Y)
+      enqueue(FT_Z)
+      enqueue(FT_A)
+      enqueue(FT_B)
+      enqueue(FT_C)
     end
 
     if publisher_imu:getNumSubscribers() == 0 then
       ros.DEBUG('imu waiting for subscriber')
     else
-      enqueue(IMU_A, nil)
-      enqueue(IMU_B, nil)
-      enqueue(IMU_C, nil)
-      enqueue(IMU_DA, nil)
-      enqueue(IMU_DB, nil)
-      enqueue(IMU_DC, nil)
+      enqueue(IMU_A)
+      enqueue(IMU_B)
+      enqueue(IMU_C)
+      enqueue(IMU_DA)
+      enqueue(IMU_DB)
+      enqueue(IMU_DC)
     end
 
     coroutine.resume(write_worker)
@@ -784,5 +772,4 @@ end
 
 init()
 run()
-
 ros.shutdown()
