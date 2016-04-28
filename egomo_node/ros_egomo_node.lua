@@ -501,9 +501,8 @@ local function init_file_descriptor(device, error_on_read_write)
           ros.ERROR("While opening device! Error: " .. err)
         else
           posix.tcsetattr(file_descriptor, 0, {
-            cflag = posix.B115200 + posix.CS8 + posix.CSIZE + posix.PARENB + posix.OPOST,
-            iflag = posix.IGNBRK + posix.BRKINT + posix.PARMRK + posix.ISTRIP + posix.IGNCR + posix.IXON,
-            oflag = posix.OPOST,
+            cflag = posix.B115200 + posix.CS8 + posix.HUPCL + posix.CREAD,
+            iflag = posix.IGNPAR,
             cc = {
               [posix.VTIME] = 0,
               [posix.VMIN] = 1
@@ -522,7 +521,47 @@ local function init_file_descriptor(device, error_on_read_write)
   end
 end
 
--- This functions writes the data stored in the write buffer to the file/device
+-- This functions writes the data stored in the write buffer in one message to the file/device
+local function write_message_at_once()
+  while true do
+    if file_descriptor == nil or file_descriptor == -1 then
+      init_file_descriptor(device, false)
+    end
+    if #write_buffer == 0 then
+      ros.DEBUG("WRITER: nothing to write yield now")
+      coroutine.yield()
+    else
+      local not_written_elements = {}
+      
+      local message = ""
+      for i,v in ipairs(write_buffer) do
+        message = message .. v
+      end
+      
+        local bytes_written, err  = posix.write(file_descriptor, v)
+
+        if err ~= nil then
+          not_written_elements[#not_written_elements+1] = v
+          if err ~= "Resource temporarily unavailable" then
+            ros.ERROR("Could not write data! " ..  err)
+            init_file_descriptor(device, true)
+          else
+            ros.DEBUG("Could not write data! " ..  err)
+          end
+        end
+      end
+
+      write_buffer = not_written_elements
+      if #write_buffer > write_buffer_max_lenght then
+        write_buffer = {}
+        ros.ERROR("WRITER: Write buffer has more than " .. write_buffer_max_lenght .. " elements and was cleared now")
+      end
+      ros.DEBUG("WRITER: job done yield now")
+      coroutine.yield()
+  end
+end
+
+-- This functions writes the data stored in the write buffer line by line to the file/device
 local function write()
   while true do
     if file_descriptor == nil or file_descriptor == -1 then
@@ -533,18 +572,10 @@ local function write()
       coroutine.yield()
     else
       local not_written_elements = {}
+      
       for i,v in ipairs(write_buffer) do
         local bytes_written, err  = posix.write(file_descriptor, v)
-        --[[
-        if bytes_written ~= nil and bytes_written ~= string.len(v) then -- TODO: Remove only for testing!!!
-          for i=1,100000 do
-            print(string.len(v))
-            print(bytes_written)
-            print(err)
-            print("unready")
-          end
-        end
-        ]]
+        
         if err ~= nil then
           not_written_elements[#not_written_elements+1] = v
           if err ~= "Resource temporarily unavailable" then
@@ -553,18 +584,14 @@ local function write()
           else
             ros.DEBUG("Could not write data! " ..  err)
           end
-          -- elseif bytes_written ~= nil and bytes_written ~= string.len(v) then
-          -- not_written_elements[#not_written_elements+1] = v
         end
       end
-      --write_buffer = {}
 
       write_buffer = not_written_elements
       if #write_buffer > write_buffer_max_lenght then
         write_buffer = {}
         ros.ERROR("WRITER: Write buffer has more than " .. write_buffer_max_lenght .. " elements and was cleared now")
       end
-      --]]
       ros.DEBUG("WRITER: job done yield now")
       coroutine.yield()
     end
@@ -602,7 +629,7 @@ local function read()
       local last_byte_is_new_line = buffer:byte(-1) == char_byte_table["\n"]
       local first_byte_is_new_line = buffer:byte(1) == char_byte_table["\n"]
       local all_lines_complete = false
-      
+
       if data_contains_any_linebreak ~= nil and last_byte_is_new_line then
         all_lines_complete = true
       end
@@ -657,9 +684,15 @@ local function message_creation()
   local xamla_imu_worker = coroutine.create(build_xamla_message)
 
   while true do
-    coroutine.resume(xamla_gripper_worker, GRIPPER)
-    coroutine.resume(xamla_ft_worker, FORCE_TORQUE)
-    coroutine.resume(xamla_imu_worker, IMU)
+    if publisher_gripper:getNumSubscribers() > 0 then
+      coroutine.resume(xamla_gripper_worker, GRIPPER)
+    end
+    if publisher_force_torque:getNumSubscribers() > 0 then
+      coroutine.resume(xamla_ft_worker, FORCE_TORQUE)
+    end
+    if publisher_imu:getNumSubscribers() > 0 then
+      coroutine.resume(xamla_imu_worker, IMU)
+    end
 
     ros.DEBUG("MESSAGE CREATION: resumed all worker yield now")
     coroutine.yield()
