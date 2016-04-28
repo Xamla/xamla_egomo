@@ -532,32 +532,32 @@ local function write_message_at_once()
       coroutine.yield()
     else
       local not_written_elements = {}
-      
+
       local message = ""
       for i,v in ipairs(write_buffer) do
         message = message .. v
       end
-      
-        local bytes_written, err  = posix.write(file_descriptor, v)
 
-        if err ~= nil then
-          not_written_elements[#not_written_elements+1] = v
-          if err ~= "Resource temporarily unavailable" then
-            ros.ERROR("Could not write data! " ..  err)
-            init_file_descriptor(device, true)
-          else
-            ros.DEBUG("Could not write data! " ..  err)
-          end
+      local bytes_written, err  = posix.write(file_descriptor, v)
+
+      if err ~= nil then
+        not_written_elements[#not_written_elements+1] = v
+        if err ~= "Resource temporarily unavailable" then
+          ros.ERROR("Could not write data! " ..  err)
+          init_file_descriptor(device, true)
+        else
+          ros.DEBUG("Could not write data! " ..  err)
         end
       end
-
       write_buffer = not_written_elements
-      if #write_buffer > write_buffer_max_lenght then
-        write_buffer = {}
-        ros.ERROR("WRITER: Write buffer has more than " .. write_buffer_max_lenght .. " elements and was cleared now")
-      end
-      ros.DEBUG("WRITER: job done yield now")
-      coroutine.yield()
+    end
+    
+    if #write_buffer > write_buffer_max_lenght then
+      write_buffer = {}
+      ros.ERROR("WRITER: Write buffer has more than " .. write_buffer_max_lenght .. " elements and was cleared now")
+    end
+    ros.DEBUG("WRITER: job done yield now")
+    coroutine.yield()
   end
 end
 
@@ -572,10 +572,10 @@ local function write()
       coroutine.yield()
     else
       local not_written_elements = {}
-      
+
       for i,v in ipairs(write_buffer) do
         local bytes_written, err  = posix.write(file_descriptor, v)
-        
+
         if err ~= nil then
           not_written_elements[#not_written_elements+1] = v
           if err ~= "Resource temporarily unavailable" then
