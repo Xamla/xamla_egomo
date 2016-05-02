@@ -305,6 +305,7 @@ local function init()
     nodehandle:shutdown()
     spinner:stop()
     ros.init('xamla_egomo')
+    print("Node reconnected to master...")
   end
 
   spinner = ros.AsyncSpinner()
@@ -931,9 +932,9 @@ local function run_using_process_data()
     end
 
     if not ros.master.check() then
+      print("Master down trying to reconnect...")
       while not ros.master.check() do
         sys.sleep(0.5)
-        print("Master down trying to reconnect...")
       end
       is_reconnected = true
       init()
@@ -994,9 +995,9 @@ local function run()
     end
 
     if not ros.master.check() then
+      print("Master down trying to reconnect...")
       while not ros.master.check() do
         sys.sleep(0.5)
-        print("Master down trying to reconnect...")
       end
       is_reconnected = true
       init()
