@@ -20,7 +20,7 @@ pos_fb | float32
 
 ### Topic XamlaGripperJointState ###
 
-Gives information about the gripper meeting the joint state message specification ([JointState.msg](http://docs.ros.org/jade/api/sensor_msgs/html/msg/JointState.html)). Subscribe by typing the following in your terminal:
+Gives information about the gripper meeting the joint state message specification ([JointState](http://docs.ros.org/jade/api/sensor_msgs/html/msg/JointState.html)). Subscribe by typing the following in your terminal:
 
     rostopic echo /XamlaGripperJointState
 
