@@ -18,6 +18,20 @@ left_finger_force | float32
 right_finger_force | float32
 pos_fb | float32
 
+### Topic XamlaGripperJointState ###
+
+Gives information about the gripper meeting the joint state message specification ([JointState.msg](http://docs.ros.org/jade/api/sensor_msgs/html/msg/JointState.html)). Subscribe by typing the following in your terminal:
+
+    rostopic echo /XamlaGripperJointState
+
+Published data | type
+---------|-----------
+header   | [std_msgs/header](http://docs.ros.org/jade/api/std_msgs/html/msg/Header.html)
+name     | string[]
+position | float64[]
+velocity | float64[]
+effort | float64[]
+
 ### Topic XamlaForceTorque ###
 
 Gives information about the force torque sensor using [WrenchStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/WrenchStamped.html). Subscribe by typing the following in your terminal: 
