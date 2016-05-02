@@ -1047,7 +1047,7 @@ local function run()
       for i,v in ipairs(read_buffer) do
         print(v)
       end
-      print("-----------------------------")
+      print("----------------------------")
     end
 
     -- Clear the read buffer
