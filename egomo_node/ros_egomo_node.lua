@@ -121,6 +121,7 @@ local char_byte_table = {
 
 local config_prefix = "term0.wave"
 
+-- defines the position of the data fiel in the process data
 local process_data_position = {
   [GRIPPER_POS_FB] = 0,
   [GRIPPER_GRIP_FORCE] = 1,
@@ -142,22 +143,22 @@ local process_data_position = {
 
 -- Hint: order is changed based on indicies. The order of the returned process data is defined by the numbers 0-15
 local config_for_process_data = {
-  [GRIPPER_POS_FB] = config_prefix .. "0" .. " = " .. GRIPPER_POS_FB .. "\n",
-  [GRIPPER_GRIP_FORCE] = config_prefix .. "1" .. " = " .. GRIPPER_GRIP_FORCE .. "\n",
-  [GRIPPER_LEFT_FINGER_FORCE] = config_prefix .. "2" .. " = " .. GRIPPER_LEFT_FINGER_FORCE .. "\n",
-  [GRIPPER_RIGHT_FINGER_FORCE] = config_prefix .. "3" .. " = " .. GRIPPER_RIGHT_FINGER_FORCE .. "\n",
-  [FT_X] = config_prefix .. "4" .. " = " .. FT_X .. "\n",
-  [FT_Y] = config_prefix .. "5" .. " = " .. FT_Y .. "\n",
-  [FT_Z] = config_prefix .. "6" .. " = " .. FT_Z .. "\n",
-  [FT_A] = config_prefix .. "7" .. " = " .. FT_A .. "\n",
-  [FT_B] = config_prefix .. "8" .. " = " .. FT_B .. "\n",
-  [FT_C] = config_prefix .. "9" .. " = " .. FT_C .. "\n",
-  [IMU_A] = config_prefix .. "10" .. " = " .. IMU_A .. "\n",
-  [IMU_B] = config_prefix .. "11" .. " = " .. IMU_B .. "\n",
-  [IMU_C] = config_prefix .. "12" .. " = " .. IMU_C .. "\n",
-  [IMU_DA] = config_prefix .. "13" .. " = " .. IMU_DA .. "\n",
-  [IMU_DB] = config_prefix .. "14" .. " = " .. IMU_DB .. "\n",
-  [IMU_DC] = config_prefix .. "15" .. " = " .. IMU_DC .. "\n"
+  [GRIPPER_POS_FB] = config_prefix .. process_data_position[GRIPPER_POS_FB] .. " = " .. GRIPPER_POS_FB .. "\n",
+  [GRIPPER_GRIP_FORCE] = config_prefix .. process_data_position[GRIPPER_GRIP_FORCE] .. " = " .. GRIPPER_GRIP_FORCE .. "\n",
+  [GRIPPER_LEFT_FINGER_FORCE] = config_prefix .. process_data_position[GRIPPER_LEFT_FINGER_FORCE] .. " = " .. GRIPPER_LEFT_FINGER_FORCE .. "\n",
+  [GRIPPER_RIGHT_FINGER_FORCE] = config_prefix .. process_data_position[GRIPPER_RIGHT_FINGER_FORCE] .. " = " .. GRIPPER_RIGHT_FINGER_FORCE .. "\n",
+  [FT_X] = config_prefix .. process_data_position[FT_X] .. " = " .. FT_X .. "\n",
+  [FT_Y] = config_prefix .. process_data_position[FT_Y] .. " = " .. FT_Y .. "\n",
+  [FT_Z] = config_prefix .. process_data_position[FT_Z] .. " = " .. FT_Z .. "\n",
+  [FT_A] = config_prefix .. process_data_position[FT_A] .. " = " .. FT_A .. "\n",
+  [FT_B] = config_prefix .. process_data_position[FT_B] .. " = " .. FT_B .. "\n",
+  [FT_C] = config_prefix .. process_data_position[FT_C] .. " = " .. FT_C .. "\n",
+  [IMU_A] = config_prefix .. process_data_position[IMU_A] .. " = " .. IMU_A .. "\n",
+  [IMU_B] = config_prefix .. process_data_position[IMU_B] .. " = " .. IMU_B .. "\n",
+  [IMU_C] = config_prefix .. process_data_position[IMU_C] .. " = " .. IMU_C .. "\n",
+  [IMU_DA] = config_prefix .. process_data_position[IMU_DA] .. " = " .. IMU_DA .. "\n",
+  [IMU_DB] = config_prefix .. process_data_position[IMU_DB] .. " = " .. IMU_DB .. "\n",
+  [IMU_DC] = config_prefix .. process_data_position[IMU_DC] .. " = " .. IMU_DC .. "\n"
 }
 
 -- Add all commands for the gripper to a table: Is used in order to fill the message
@@ -431,7 +432,7 @@ end
 -- Output:
 --  fieldName - Name of the field corresponds to this value (e.g. "gripper0.pos_fb")
 --  value - The corresponding value as a number (e.g. 1.004)
-local function parse_data(line, commands, blacklist) -- TODO: Konzept mit blacklist diskutieren und ggf. optional machen
+local function parse_data(line, commands, blacklist)
   local fieldName
   local value
 
@@ -466,7 +467,10 @@ local function parse_process_data(line)
   return values
 end
 
--- This function is responsible for creating and publishing the messages based on the read data
+-- This function is responsible for creating and publishing the messages based on the read data (single line protocol).
+-- Notice: only one message is sent even when enough data is received for more messages. Due to blacklist concept values which
+-- have been set already won't be replace by newer values. This might lead to that some values will be discarded. Use process data
+-- concept to prevent discarding values.
 -- Input:
 --  type - Defines the type of the message (e.g. GRIPPER, FORCE_TORQUE, IMU)
 local function build_xamla_message(type)
@@ -505,7 +509,7 @@ local function build_xamla_message(type)
         local field_name, value = parse_data(line, used_command_list, blacklist)
         if field_name ~= nil and value ~= nil then
           -- Try to assign the value to the given field
-          if assign_values_to_message(message, field_name, value, type) then
+          if assign_values_to_message(message, field_name, value, type) then      
             table.insert(blacklist, field_name)
             numberOfSetParameters = numberOfSetParameters + 1;
           end
@@ -528,19 +532,26 @@ local function build_xamla_message(type)
   end
 end
 
-local function get_type(string)
+-- This function checks whether the input is a valid command and returns the type
+
+-- Input:
+--  command - Command which is used for comparision
+-- Output:
+--  type - The type to which the command belongs to (Gripper, FT, IMU)
+
+local function get_type(command)
   for i,v in ipairs(commands_for_gripper) do
-    if string == v then
+    if command == v then
       return GRIPPER
     end
   end
   for i,v in ipairs(commands_for_force_torque) do
-    if string == v then
+    if command == v then
       return FORCE_TORQUE
     end
   end
   for i,v in ipairs(commands_for_imu) do
-    if string == v then
+    if command == v then
       return FORCE_TORQUE
     end
   end
@@ -548,8 +559,6 @@ local function get_type(string)
 end
 
 -- This function is responsible for creating and publishing the messages based on the read data
--- Input:
---  type - Defines the type of the message (e.g. GRIPPER, FORCE_TORQUE, IMU)
 local function build_xamla_message_based_on_process_data()
   local message_gripper
   local message_force_torque
@@ -578,7 +587,9 @@ local function build_xamla_message_based_on_process_data()
           for i, v in pairs(config_for_process_data) do
             type = get_type(i)
             if type == GRIPPER then
+              -- process_data_position[i]+1 --> the io-board starts counting at 0 therefore index is incremented by 1
               assign_values_to_message(message_gripper, i, values[process_data_position[i]+1], type)
+              -- Special case for the joint state of the gripper
               if i == GRIPPER_POS_FB then
                 assign_values_to_message(message_join_state, i, values[process_data_position[i]+1], type)
               end
@@ -667,6 +678,7 @@ local function init_file_descriptor(device, error_on_read_write)
   end
 end
 
+-- This function sends the current config for the process data to the board
 function send_config_to_board()
   if file_descriptor == nil or file_descriptor == -1 then
     init_file_descriptor(device, false)
@@ -763,7 +775,6 @@ local function write()
   end
 end
 
--- TODO Ggf. übersichtlicher gestalten
 -- This function reads from the file/device and stores the data line by line into the read_buffer
 local function read()
   local chunk_size = 4096
@@ -841,6 +852,7 @@ local function read()
   end
 end
 
+-- Checks if any subsriber exists
 local function is_any_subscribed()
   if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0 or publisher_joint_state:getNumSubscribers() > 0 then
     return true
@@ -848,7 +860,7 @@ local function is_any_subscribed()
   return false
 end
 
--- This function initiates the creation of the different messages
+-- This function initiates the creation of the different messages based on the process data concept
 local function message_creation_with_process_data()
   local xamla_message_publisher = coroutine.create(build_xamla_message_based_on_process_data)
 
@@ -906,6 +918,7 @@ local function message_creation()
   end
 end
 
+-- Main loop using process data protocoll
 local function run_using_process_data()
   local write_worker = coroutine.create(write)
   local reader_worker = coroutine.create(read)
@@ -968,6 +981,7 @@ local function run_using_process_data()
   end
 end
 
+-- Main loop using the single line protocol 
 local function run()
   local write_worker = coroutine.create(write)
   local reader_worker = coroutine.create(read)
@@ -1059,4 +1073,5 @@ end
 
 init()
 run_using_process_data()
+-- run() -- use this function for the old protocol
 ros.shutdown()
