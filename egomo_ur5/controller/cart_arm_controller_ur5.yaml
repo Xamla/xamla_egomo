@@ -1,4 +1,18 @@
-arm_cartesian_pose_controller:
-  type: EECartImpedControlPlugin
-  root_name: base_link
-  tip_name: tool0
+arm_pose_controller:
+  type: "robot_controllers/CartesianPoseController"
+  root_name: "base_link"
+  tip_name: "tool0"
+  fb_trans:
+      p: 1000.0
+      d: 0.0
+      i: 0.0
+      i_clamp: 0.0
+  fb_rot:
+      p: 1000.0
+      d: 0.0
+      i: 0.0
+      i_clamp: 0.0
+
+default_controllers:
+  - "arm_pose_controller"
+
