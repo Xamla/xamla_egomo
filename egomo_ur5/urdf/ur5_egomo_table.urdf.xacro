@@ -59,24 +59,25 @@
     center_of_mass = [ [0, -0.02561, 0.00193], [0.2125, 0, 0.11336], [0.11993, 0.0, 0.0265], [0, -0.0018, 0.01634], [0, 0.0018,0.01634], [0, 0, -0.001159] ]
   -->
 
+<!--
   <property name="theta_1" value="0.0" />
   <property name="ur5_d1" value="0.089159" />
   <property name="ur5_a1" value="0.0" />
   <property name="alpha_1" value="${pi/2}" />
   
 
-  <property name="theta_2" value="-${pi/2}" />
+  <property name="theta_2" value="0.0" />
   <property name="ur5_d2" value="0.0" />
-  <property name="ur5_a2" value="-0.42500" />
+  <property name="ur5_a2" value="0.425" />
   <property name="alpha_2" value="0.0" />
   
   <property name="theta_3" value="0.0" />
   <property name="ur5_d3" value="0.0" />
-  <property name="ur5_a3" value="-0.39225" />
+  <property name="ur5_a3" value="0.39225" />
   <property name="alpha_3" value="0.0" />
   
-  <property name="theta_4" value="-${pi/2}" />
-  <property name="ur5_d4" value="0.10915" />
+  <property name="theta_4" value="0.0" />
+  <property name="ur5_d4" value="-0.10915" />
   <property name="ur5_a4" value="0.0" />
   <property name="alpha_4" value="${pi/2}" />
 
@@ -85,10 +86,16 @@
   <property name="ur5_a5" value="0.0" />
   <property name="alpha_5" value="-${pi/2}" />
 
-  <property name="theta_6" value="0.0" />
-  <property name="ur5_d6" value="0.0823" />
+  <property name="theta_6" value="${pi}" />
+  <property name="ur5_d6" value="-0.0823" />
   <property name="ur5_a6" value="0.0" />
-  <property name="alpha_6" value="0.0" />
+  <property name="alpha_6" value="${pi}" />
+
+-->
+
+
+
+
 
 
 <!--
@@ -98,7 +105,7 @@ Joint 2(theta, d, a, alpha)-0.000189364 0 0.39225 -0.00944871
 Joint 3(theta, d, a, alpha)0.000488426 -0.10915 0 1.57342
 Joint 4(theta, d, a, alpha)-0.000123914 0.09465 0 -1.57255
 Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
-
+-->
 
 
   <property name="theta_1" value="-0.00205442" />
@@ -117,7 +124,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
   <property name="ur5_a3" value="0.39225" />
   <property name="alpha_3" value="-0.00944871" />
   
-  <property name="theta_4" value="-0.000488426" />
+  <property name="theta_4" value="0.000488426" />
   <property name="ur5_d4" value="-0.10915" />
   <property name="ur5_a4" value="0.0" />
   <property name="alpha_4" value="1.57342" />
@@ -131,18 +138,18 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
   <property name="ur5_d6" value="-0.0823" />
   <property name="ur5_a6" value="0.0" />
   <property name="alpha_6" value="3.14331" />
--->
+
 
 
  <!-- Arbitrary offsets for shoulder/elbow joints -->
   <property name="shoulder_offset" value="0.13585" />  <!-- measured from model -->
-  <property name="elbow_offset" value="-0.1197" /> <!-- measured from model -->
+  <property name="elbow_offset" value="0.1197" /> <!-- measured from model -->
 
   <!-- link lengths used in model -->
   <property name="shoulder_height" value="${ur5_d1}" />
   <property name="upper_arm_length" value="${-ur5_a2}" />
   <property name="forearm_length" value="${-ur5_a3}" />
-  <property name="wrist_1_length" value="${ur5_d4 - elbow_offset - shoulder_offset}" />
+  <property name="wrist_1_length" value="${ur5_d4  + shoulder_offset+ elbow_offset}" />
   <property name="wrist_2_length" value="${ur5_d5}" />
   <property name="wrist_3_length" value="${ur5_d6}" />
   <!--property name="shoulder_height" value="0.089159" /-->
@@ -195,7 +202,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
 
   <link name="shoulder_linka">
     <visual>
-	<origin xyz="0 0 0" rpy="0.0 0 0" />
+	<origin xyz="0 0 0.0" rpy="0.0 0 0" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/visual/shoulder.dae"/>
       </geometry>
@@ -241,7 +248,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
   <joint name="shoulder_lift_joint" type="revolute"><!--Joint 2-->
     <parent link="shoulder_link"/>
     <child link="upper_arm_linka"/>
- <origin rpy="0.0 0.0 ${theta_2}" xyz="0.0 0.0 ${ur5_d2+elbow_offset}"/><!--Joint 2-->
+ <origin rpy="0.0 0.0 ${theta_2}" xyz="0.0 0.0 ${ur5_d2}"/><!--Joint 2-->
     <axis xyz="0 0 -1"/>
     <limit effort="150.0" lower="-3.14159265" upper="-0.1" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
@@ -249,7 +256,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
   <link name="upper_arm_linka">
 
     <visual>
-	<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+	<origin xyz="0 0 ${-shoulder_offset}" rpy="${pi/2} ${pi} ${pi/2}" />
       <geometry>
 
         <mesh filename="package://egomo_ur5/meshes/ur5/visual/upper_arm.dae"/>
@@ -259,7 +266,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       </material>
     </visual>
     <collision>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+		<origin xyz="0 0 ${-shoulder_offset}" rpy="${pi/2} ${pi} ${pi/2}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/collision/upper_arm.stl"/>
       </geometry>
@@ -274,7 +281,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <parent link="upper_arm_linka"/>
     <child link="upper_arm_link"/>
 
-    <origin rpy="${alpha_2} 0.0 0.0" xyz="0.0 ${-ur5_a2} 0.0 "/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
+    <origin rpy="${alpha_2} 0.0 0.0" xyz="${ur5_a2} 0.0  0.0 "/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
   </joint>
   <link name="upper_arm_link">
     <visual>
@@ -299,7 +306,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
   <joint name="elbow_joint" type="revolute"> <!--Joint 3-->
     <parent link="upper_arm_link"/>
     <child link="forearm_linka"/>
- <origin rpy="0.0 0.0 ${theta_3}" xyz="0.0 0.0 ${ur5_d3-elbow_offset}"/>
+ <origin rpy="0.0 0.0 ${theta_3}" xyz="0.0 0.0 ${ur5_d3}"/>
 <!--origin rpy="0.0 0.0 0.0" xyz="0.0 -0.1197 0.425"/-->
     <axis xyz="0 0 -1"/>
     <limit effort="150.0" lower="-3" upper="3" velocity="3.15"/> <!-- +/- 175 deg -->
@@ -308,7 +315,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
 
 <link name="forearm_linka">
  <visual>
-	<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+	<origin xyz="0 0 ${elbow_offset-shoulder_offset}" rpy="${pi/2} ${pi} ${pi/2}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/visual/forearm.dae"/>
       </geometry>
@@ -317,7 +324,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       </material>
     </visual>
     <collision>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+<origin xyz="0 0 ${elbow_offset-shoulder_offset}" rpy="${pi/2} ${pi} ${pi/2}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/collision/forearm.stl"/>
       </geometry>
@@ -332,7 +339,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <parent link="forearm_linka"/>
     <child link="forearm_link"/>
 
-    <origin rpy="${alpha_3} 0.0 0.0" xyz="0.0 ${-ur5_a3} 0.0"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
+    <origin rpy="${alpha_3} 0.0 0.0" xyz="${ur5_a3} 0.0   0.0"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
   </joint>
 
   <link name="forearm_link">
@@ -360,7 +367,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <parent link="forearm_link"/>
     <child link="wrist_1_linka"/>
     <!--origin xyz="0.0 0.0 ${forearm_length}" rpy="0.0 ${pi / 2.0} 0.0" /-->
- <origin  xyz="0.0 0.0 ${ur5_d4-wrist_1_length}" rpy="0.0 0.0 ${theta_4}"/>
+ <origin  xyz="0.0 0.0 ${ur5_d4}" rpy="0.0 0.0 ${theta_4}"/>
     <!--origin rpy="0.0 1.570796326795 0.0" xyz="0.0 0.0 0.39225"/-->
     <axis xyz="0 0 -1"/>
     <limit effort="28.0" lower="-3.92" upper="0.78" velocity="3.2"/><!-- -225 deg to 45 deg -->
@@ -368,7 +375,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
   </joint>
   <link name="wrist_1_linka">
     <visual>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+		<origin xyz="0 0 ${0.10915+(elbow_offset-shoulder_offset)}" rpy="${pi/2}  ${pi} 0" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/visual/wrist_1.dae"/>
       </geometry>
@@ -377,7 +384,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       </material>
     </visual>
     <collision>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+		<origin xyz="0 0 ${0.10915+(elbow_offset-shoulder_offset)}" rpy="${pi/2}  ${pi} 0" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/collision/wrist_1.stl"/>
       </geometry>
@@ -420,8 +427,8 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <child link="wrist_2_linka"/>
     <!--origin rpy="0.0 0.0 0.0" xyz="0.0 0.093 0.0"/-->
       <!--origin xyz="0.0 ${wrist_1_length} 0.0" rpy="0.0 0.0 0.0" /-->
- <origin rpy="0.0 0.0 ${theta_5}" xyz="0.0 ${-wrist_1_length}  ${ur5_d5-wrist_2_length}"/>
-    <axis xyz="0 0 -1"/>
+ <origin rpy="0.0 0.0 ${theta_5}" xyz="0.0 0.0  ${ur5_d5}"/>
+    <axis xyz="0 0 1"/>
     <limit effort="28.0" lower="-${pi}" upper="${pi}" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
@@ -450,11 +457,11 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <parent link="wrist_2_linka"/>
     <child link="wrist_2_link"/>
 
-    <origin rpy="${alpha_5} 0.0 0.0" xyz="${ur5_a5} 0.0 0.0"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
+    <origin rpy="${alpha_5} 0.0 0.0" xyz="${ur5_a5} 0.0  0.0"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
 </joint>
   <link name="wrist_2_link">
  <visual>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+<origin xyz="0 0.09465 0" rpy="-${pi/2} 0 ${pi}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/visual/wrist_2.dae"/>
       </geometry>
@@ -463,7 +470,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       </material>
     </visual>
     <collision>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+<origin xyz="0 0.09465 0" rpy="-${pi/2} 0 ${pi}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/collision/wrist_2.stl"/>
       </geometry>
@@ -482,7 +489,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <child link="wrist_3_linka"/>
     <!--origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.09465"/-->
       <!--origin xyz="0.0 0.0 ${wrist_2_length}" rpy="0.0 0.0 0.0" /-->
- <origin rpy="0.0 0.0 ${theta_6}" xyz="0.0 ${wrist_2_length} ${ur5_d6-wrist_3_length}"/>
+ <origin rpy="0.0 0.0 ${theta_6}" xyz="0.0 0.0 ${ur5_d6}"/>
     <axis xyz="0 0 -1"/>
     <limit effort="28.0" lower="-${pi}" upper="${pi}" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
@@ -511,11 +518,11 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <parent link="wrist_3_linka"/>
     <child link="wrist_3_link"/>
 
-    <origin rpy="${alpha_6} 0.0 0.0" xyz="${ur5_a6} 0.0 0.0"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
+    <origin rpy="${alpha_6} 0.0 0.0" xyz=" ${ur5_a6} 0.0  0.0"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
   </joint>
   <link name="wrist_3_link">
      <visual>
-	<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+	<origin xyz="0 0 -0.0823" rpy="-${pi/2} ${pi} ${pi}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/visual/wrist_3.dae"/>
       </geometry>
@@ -524,7 +531,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       </material>
     </visual>
     <collision>
-<origin xyz="0 0 0" rpy="-${pi/2} 0 0" />
+<origin xyz="0 0 -0.0823" rpy="-${pi/2} ${pi} ${pi}" />
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/ur5/collision/wrist_3.stl"/>
       </geometry>
@@ -606,20 +613,22 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
-  
+
+    <!--  
   <link name="base"/>
   <joint name="base_link-base_fixed_joint" type="fixed">
-    <!-- NOTE: this rotation is only needed as long as base_link itself is
+     NOTE: this rotation is only needed as long as base_link itself is
                  not corrected wrt the real robot (ie: rotated over 180
                  degrees)
-      -->
+     
     <origin rpy="0 0 -3.14159265" xyz="0 0 0"/>
     <parent link="base_link"/>
     <child link="base"/>
   </joint>
+ -->
   <link name="tool0"/>
   <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
-    <origin rpy="${pi}  0 0" xyz="0 0.0 -0.0823"/>
+    <origin rpy="0  0 0" xyz="0 0.0 0.0"/>
     <parent link="wrist_3_link"/>
     <child link="tool0"/>
   </joint>
@@ -634,6 +643,8 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
 
   <!-- force torque sensor (robotiq) -->
 
+  
+
   <link name="fts_robotside">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -641,19 +652,21 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
       <inertia ixx="0.000661171875" ixy="0" ixz="0" iyy="0.000661171875" iyz="0" izz="0.00117"/>
     </inertial>
     <visual>
-      <origin rpy="0 ${pi} -1.570796326795" xyz="0 0 0.0375"/>
+      <origin rpy="0 3.14159265359 -1.570796326795" xyz="0 0 0.0375"/>
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/robotiq-ft300/visual/ft300.dae"/>
       </geometry>
     </visual>
     <collision>
-      <origin rpy="0 ${pi} -1.570796326795" xyz="0 0 0.0375"/>
+      <origin rpy="0 3.14159265359 -1.570796326795" xyz="0 0 0.0375"/>
       <geometry>
         <mesh filename="package://egomo_ur5/meshes/robotiq-ft300/collision/ft300.stl"/>
       </geometry>
     </collision>
   </link>
-  
+
+
+
   <!-- virtual measurement frame -->
   <joint name="measurment_joint" type="fixed">
     <origin rpy="0 0 0" xyz="0 0 0.01625"/>
