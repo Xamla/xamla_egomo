@@ -76,6 +76,13 @@ local service
 local commands_for_gripper = {}
 local send_set_command_spec
 
+local min_gripper_in_m = 0.0
+local max_gripper_in_m = 0.087
+
+local publisher_command_return
+local command_return_spec
+local call_sequence = 1
+
 -- Force Torque --
 local publisher_force_torque
 local force_torque_spec
@@ -89,6 +96,7 @@ local commands_for_imu = {}
 -- Joint State Gripper --
 local joint_state_spec
 local publisher_joint_state
+local joint_state_time
 
 -- Identificaton constants
 local GRIPPER = 1
@@ -204,6 +212,14 @@ local function add_commands_for_imu()
   }
 end
 
+local function convert_pos_fb_from_byte_to_m(value)
+  return 0.087 / (13.0 - 230.0) * (value - 230.0) -- TODO: Warum 13 dabei konnte 3 als Untergrenze beobachtet werden
+end
+
+local function convert_pos_fb_from_m_to_byte(value)
+  return math.floor((13.0-230.0)/0.087 * value + 230.0) -- TODO: Warum 13 dabei konnte 3 als Untergrenze beobachtet werden
+end
+
 -- This function searches for devices in order to get possible paths for read/write
 -- Input:
 --  id_vendor - The vendor id of the desired device
@@ -282,7 +298,20 @@ local function send_set_command_handler(request, response, header)
   local command_to_send = choose_command(request.command_name, commands_for_gripper)
 
   if command_to_send ~= nil then
-    enqueue(command_to_send, request.value)
+    if request.command_name == "pos_cmd" then
+      local converted_value = convert_pos_fb_from_m_to_byte(request.value)
+      local min_pos_value = 0
+      local max_pos_value = 255
+      if converted_value < min_pos_value then
+        converted_value = min_pos_value
+      elseif converted_value > max_pos_value then
+        converted_value = max_pos_value
+      end
+      ros.DEBUG("Value in m " .. request.value .. " was converted to byte: " .. converted_value)
+      enqueue(command_to_send, converted_value)
+    else
+      enqueue(command_to_send, request.value)
+    end
     response.response = "command accepted"
   else
     response.response = "command not valid"
@@ -301,6 +330,7 @@ local function init()
     publisher_force_torque:shutdown()
     publisher_imu:shutdown()
     publisher_joint_state:shutdown()
+    publisher_command_return:shutdown()
     service:shutdown()
     nodehandle:shutdown()
     spinner:stop()
@@ -318,8 +348,11 @@ local function init()
   gripper_spec = ros.MsgSpec('egomo_msgs/XamlaGripper')
   publisher_gripper = nodehandle:advertise("XamlaGripper", gripper_spec)
 
-  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendGripperSetCommand')
+  -- Experimental
+  command_return_spec = ros.MsgSpec('std_msgs/Header')
+  publisher_command_return = nodehandle:advertise("XamlaGripperCommandReturn", command_return_spec)
 
+  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendGripperSetCommand')
   service = nodehandle:advertiseService('egomo_msgs/SendGripperSetCommand', send_set_command_spec, send_set_command_handler)
 
   -- Force Torque --
@@ -337,6 +370,17 @@ local function init()
   publisher_joint_state = nodehandle:advertise("XamlaGripperJointState", joint_state_spec)
 end
 
+local function assign_values_to_joint_state_message(joint_state_message, pos_fb)
+  --local previous_position
+  local current_position = convert_pos_fb_from_byte_to_m(pos_fb) -- TODO: Warum 13 dabei konnte 3 als Untergrenze beobachtet werden
+  if current_position < min_gripper_in_m then
+    current_position = min_gripper_in_m
+  elseif current_position > max_gripper_in_m then
+    current_position = max_gripper_in_m
+  end
+  joint_state_message.position:set(torch.DoubleTensor({math.abs(current_position)})) -- abs() because of -0.0
+end
+
 -- This function assigns the a value to a field of a message (if possible)
 -- Input:
 --  message - The message the value is supposed to be assigned to
@@ -352,10 +396,16 @@ local function assign_values_to_message(message, field_name, value, type)
       return true
     elseif field_name == GRIPPER_POS_FB then
       if message.spec.type == "sensor_msgs/JointState" then
-        message.position:set(torch.DoubleTensor({value}))
+        assign_values_to_joint_state_message(message,value)
         return true
       else
-        message.pos_fb = value
+        local current_position = convert_pos_fb_from_byte_to_m(value)
+        if current_position < min_gripper_in_m then
+          current_position = min_gripper_in_m
+        elseif current_position > max_gripper_in_m then
+          current_position = max_gripper_in_m
+        end
+        message.pos_fb = math.abs(current_position)
         return true
       end
     elseif field_name == GRIPPER_LEFT_FINGER_FORCE then
@@ -510,11 +560,18 @@ local function build_xamla_message(type)
         local field_name, value = parse_data(line, used_command_list, blacklist)
         if field_name ~= nil and value ~= nil then
           -- Try to assign the value to the given field
-          if assign_values_to_message(message, field_name, value, type) then      
+          if assign_values_to_message(message, field_name, value, type) then
             table.insert(blacklist, field_name)
             numberOfSetParameters = numberOfSetParameters + 1;
           end
         end
+      else
+        local return_message = ros.Message('std_msgs/Header')
+        return_message.seq = call_sequence
+        call_sequence = call_sequence + 1
+        return_message.stamp = ros.Time.now()
+        return_message.frame_id = line
+        publisher_command_return:publish(return_message)
       end
     end
 
@@ -576,7 +633,7 @@ local function build_xamla_message_based_on_process_data()
   message_force_torque.header.frame_id = "ee_link"
   message_imu.header.frame_id = "ee_link"
   message_join_state.header.frame_id = "ee_link"
-  message_join_state.name = {"gripper"}
+  message_join_state.name = {"robotiq_85_left_knuckle_joint"}
 
   while true do
     for i,line in ipairs(read_buffer) do
@@ -601,6 +658,13 @@ local function build_xamla_message_based_on_process_data()
             end
           end
         end
+      else
+        local return_message = ros.Message('std_msgs/Header')
+        return_message.seq = call_sequence
+        call_sequence = call_sequence + 1
+        return_message.stamp = ros.Time.now()
+        return_message.frame_id = line
+        publisher_command_return:publish(return_message)
       end
       message_gripper.header.stamp = ros.Time.now()
       publisher_gripper:publish(message_gripper)
@@ -724,7 +788,7 @@ local function write_message_at_once()
           ros.ERROR("Could not write data! " ..  err)
           init_file_descriptor(device, true)
         else
-          ros.DEBUG("Could not write data! " ..  err)
+          ros.INFO("Could not write data! " ..  err)
         end
       end
       write_buffer = not_written_elements
@@ -760,7 +824,7 @@ local function write()
             ros.ERROR("Could not write data! " ..  err)
             init_file_descriptor(device, true)
           else
-            ros.DEBUG("Could not write data! " ..  err)
+            ros.INFO("Could not write data! " ..  err)
           end
         end
       end
@@ -855,7 +919,8 @@ end
 
 -- Checks if any subsriber exists
 local function is_any_subscribed()
-  if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0 or publisher_joint_state:getNumSubscribers() > 0 then
+  if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0
+    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0 then
     return true
   end
   return false
@@ -982,7 +1047,7 @@ local function run_using_process_data()
   end
 end
 
--- Main loop using the single line protocol 
+-- Main loop using the single line protocol
 local function run()
   local write_worker = coroutine.create(write)
   local reader_worker = coroutine.create(read)
