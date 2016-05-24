@@ -105,7 +105,9 @@ local IMU = 3
 
 local file_descriptor = nil
 
+-- Debug
 local debug = false
+local joint_state = 0
 
 local is_reconnected = false -- Is used in init() function and in run()
 
@@ -213,11 +215,11 @@ local function add_commands_for_imu()
 end
 
 local function convert_pos_fb_from_byte_to_m(value)
-  return 0.087 / (13.0 - 230.0) * (value - 230.0) -- TODO: Warum 13 dabei konnte 3 als Untergrenze beobachtet werden
+  return 0.087 / (3.0 - 230.0) * (value - 230.0)
 end
 
 local function convert_pos_fb_from_m_to_byte(value)
-  return math.floor((13.0-230.0)/0.087 * value + 230.0) -- TODO: Warum 13 dabei konnte 3 als Untergrenze beobachtet werden
+  return math.floor((3.0-230.0)/0.087 * value + 230.0)
 end
 
 -- This function searches for devices in order to get possible paths for read/write
@@ -295,6 +297,11 @@ end
 
 -- Handler for service SendSetCommand
 local function send_set_command_handler(request, response, header)
+  if request.command_name == "joint_state" then
+    joint_state = math.rad(request.value)
+    return true
+  end
+  
   local command_to_send = choose_command(request.command_name, commands_for_gripper)
 
   if command_to_send ~= nil then
@@ -367,18 +374,51 @@ local function init()
 
   -- Joint State Gripper --
   joint_state_spec = ros.MsgSpec('sensor_msgs/JointState')
-  publisher_joint_state = nodehandle:advertise("XamlaGripperJointState", joint_state_spec)
+  publisher_joint_state = nodehandle:advertise("joint_states", joint_state_spec)
 end
 
 local function assign_values_to_joint_state_message(joint_state_message, pos_fb)
   --local previous_position
-  local current_position = convert_pos_fb_from_byte_to_m(pos_fb) -- TODO: Warum 13 dabei konnte 3 als Untergrenze beobachtet werden
-  if current_position < min_gripper_in_m then
-    current_position = min_gripper_in_m
-  elseif current_position > max_gripper_in_m then
-    current_position = max_gripper_in_m
+  local value_in_rad = 0.8 - ((0.8/0.085) * convert_pos_fb_from_byte_to_m(pos_fb))
+  
+  if value_in_rad < 0 then
+    value_in_rad = 0
+  elseif value_in_rad > 0.8 then
+    value_in_rad = 0.8
+  end 
+  
+  --joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
+  
+  joint_state_message.position:set(torch.DoubleTensor({joint_state}))
+  
+  --[[
+  local velocity
+
+  if(joint_state_message.position:dim() == 0) then
+    joint_state_message.position:set(torch.DoubleTensor({current_position}))
+    velocity = 0
+    local timer = torch.Timer()
+    timer:stop()
+    timer:reset()
+    timer:resume()
+    joint_state_time = timer:time().real
+    timer:stop()
+  else
+    previous_position = joint_state_message.position[1]
+    joint_state_message.position:set(torch.DoubleTensor({current_position}))
+    local timer = torch.Timer()
+    timer:stop()
+    timer:reset()
+    timer:resume()
+    local timestamp = timer:time().real
+    timer:stop()
+    local dt = timestamp - joint_state_time
+    joint_state_time = timestamp
+    velocity = (current_position - previous_position) / dt
   end
-  joint_state_message.position:set(torch.DoubleTensor({math.abs(current_position)})) -- abs() because of -0.0
+  joint_state_message.velocity:set(torch.DoubleTensor({velocity}))
+  ]]
+  --joint_state_message.position:set(torch.DoubleTensor({math.abs(current_position)})) -- abs() because of -0.0
 end
 
 -- This function assigns the a value to a field of a message (if possible)
@@ -633,7 +673,7 @@ local function build_xamla_message_based_on_process_data()
   message_force_torque.header.frame_id = "ee_link"
   message_imu.header.frame_id = "ee_link"
   message_join_state.header.frame_id = "ee_link"
-  message_join_state.name = {"robotiq_85_left_knuckle_joint"}
+  message_join_state.name = {"robotiq_85_finger_right_1_joint"}
 
   while true do
     for i,line in ipairs(read_buffer) do
