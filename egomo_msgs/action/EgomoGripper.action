@@ -1,0 +1,8 @@
+#goal definition
+float32 goal_pos
+---
+#result definition
+float32 pos_fb
+---
+#feedback
+float32 pos_fb
