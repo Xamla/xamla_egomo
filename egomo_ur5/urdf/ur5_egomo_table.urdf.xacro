@@ -45,6 +45,7 @@
   <property name="wrist_1_cog" value="0.0 0.110949 0.01634" />
   <property name="wrist_2_cog" value="0.0 0.0018 0.11099" />
   <property name="wrist_3_cog" value="0.0 0.001159 0.0" />
+  <xacro:include filename="$(find egomo_ur5)/urdf/default_ur5_DH_parameters.xacro" />
 
   <!-- Kinematic model -->
   <!-- Properties from urcontrol.conf -->
@@ -108,36 +109,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
 -->
 
 
-  <property name="theta_1" value="-0.00205442" />
-  <property name="ur5_d1" value="0.089159" />
-  <property name="ur5_a1" value="0.0" />
-  <property name="alpha_1" value="1.57718" />
-  
 
-  <property name="theta_2" value="-0.000123686" />
-  <property name="ur5_d2" value="0.0" />
-  <property name="ur5_a2" value="0.42500" />
-  <property name="alpha_2" value="-0.00201947" />
-  
-  <property name="theta_3" value="-0.000189364" />
-  <property name="ur5_d3" value="0.0" />
-  <property name="ur5_a3" value="0.39225" />
-  <property name="alpha_3" value="-0.00944871" />
-  
-  <property name="theta_4" value="0.000488426" />
-  <property name="ur5_d4" value="-0.10915" />
-  <property name="ur5_a4" value="0.0" />
-  <property name="alpha_4" value="1.57342" />
-
-  <property name="theta_5" value="-0.000123914" />
-  <property name="ur5_d5" value="0.09465" />
-  <property name="ur5_a5" value="0.0" />
-  <property name="alpha_5" value="-1.57255" />
-
-  <property name="theta_6" value="3.14254" />
-  <property name="ur5_d6" value="-0.0823" />
-  <property name="ur5_a6" value="0.0" />
-  <property name="alpha_6" value="3.14331" />
 
 
 
@@ -196,7 +168,7 @@ Joint 5(theta, d, a, alpha)3.14254 -0.0823 0 3.14331
     <origin rpy="0.0 0.0 ${theta_1 }" xyz="0.0 0.0 ${ur5_d1}"/><!--origin rpy="0.0 0.0 0.7853981625" xyz="0.0 0.0 0.089159"/-->
 
     <axis xyz="0 0 1"/>
-    <limit effort="150.0" lower="-3.14159265" upper="3.14159265" velocity="3.15"/>
+    <limit effort="150.0" lower="-1.14159265" upper="1.14159265" velocity="3.15"/>
     <dynamics damping="0.0" friction="0.0"/>
   </joint>
 
