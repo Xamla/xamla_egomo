@@ -63,12 +63,12 @@ Command | value range | description
 reset   | 0 or 1 | Resets the gripper when value is set from 1 -> 0 (falling edge)
 max_speed | 0-255 | Controls the speed of the gripper
 max_force | 0-255 | Controls the force of the gripper
-pos_cmd | 0-255 | Moves the gripper to the position
+pos_cmd | 0.0-0.087 | Moves the gripper to the position (in m)
 
 Notice that you should reset the gripper before use. While initializing the gripper moves. Here are two examples of valid calls of the service from the terminal.
 
     rosservice call /egomo_msgs/SendGripperSetCommand "reset" 0
-    rosservice call /egomo_msgs/SendGripperSetCommand "pos_cmd" 127
+    rosservice call /egomo_msgs/SendGripperSetCommand "pos_cmd" 0.05
     
 ## Troubleshooting FAQ
 
