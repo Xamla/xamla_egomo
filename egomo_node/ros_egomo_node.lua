@@ -389,9 +389,9 @@ local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
     value_in_rad = 0.8
   end
 
-  --joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
+  joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
   -- TODO: Bisher nur Debug
-  joint_state_message.position:set(torch.DoubleTensor({joint_state}))
+  --joint_state_message.position:set(torch.DoubleTensor({joint_state}))
 end
 
 -- This function assigns the a value to a field of a message (if possible)
