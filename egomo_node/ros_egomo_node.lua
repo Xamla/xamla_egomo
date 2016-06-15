@@ -1,5 +1,9 @@
 local ros = require "ros"
 
+require 'ros.actionlib.SimpleActionServer'
+
+local actionlib = ros.actionlib
+
 local path = require "pl.path"
 
 local posix = require "posix"
@@ -63,6 +67,11 @@ local IMU_DB = "imu0.db"
 -- returns the angular velocity around the z-axis (yaw) (in rad/s)
 local IMU_DC = "imu0.dc"
 
+-- Laser commands --
+local LASER1 = "io0.out0"
+local LASER2 = "io0.out1"
+local LASER3 = "io0.out2"
+
 -- ros common
 local spinner
 local nodehandle
@@ -77,6 +86,11 @@ local publisher_gripper
 local service
 local commands_for_gripper = {}
 local send_set_command_spec
+local action_server_for_gripper
+-- Actions
+local last_pos_fb = 0.0
+local desired_goal_pos = nil
+local tolerance_for_goal_position = 0.0015
 
 local min_gripper_in_m = 0.0
 local max_gripper_in_m = 0.087
@@ -95,6 +109,8 @@ local imu_spec
 local publisher_imu
 local commands_for_imu = {}
 
+local commands_for_laser = {}
+
 -- Joint State Gripper --
 local joint_state_spec
 local publisher_joint_state
@@ -109,7 +125,6 @@ local file_descriptor = nil
 
 -- Debug
 local debug = false
-local joint_state = 0
 
 local is_reconnected = false -- Is used in init() function and in run()
 
@@ -216,7 +231,18 @@ local function add_commands_for_imu()
   }
 end
 
+local function add_commands_for_laser()
+  commands_for_laser = {
+    LASER1,
+    LASER2,
+    LASER3
+  }
+end
+
 local function convertPosFbFromByteToMeter(value)
+  if value > 230 then
+    value = 230.0
+  end
   return 0.087 / (3.0 - 230.0) * (value - 230.0) -- TODO: Has to be validated
 end
 
@@ -272,6 +298,13 @@ local function findDevice(id_vendor, id_product)
   return found
 end
 
+local function compareFloats(a, b, epsilon)
+  local a = math.abs(a)
+  local b = math.abs(b)
+  local diff = math.abs(a - b)
+  return diff < epsilon
+end
+
 -- This function searches for egomo devices
 -- Output:
 --  devices - Table containing all devices
@@ -299,12 +332,10 @@ end
 
 -- Handler for service SendSetCommand
 local function sendSetCommandHandler(request, response, header)
-  if request.command_name == "joint_state" then
-    joint_state = math.rad(request.value)
-    return true
-  end
-
   local command_to_send = chooseCommand(request.command_name, commands_for_gripper)
+  if command_to_send == nil then
+    command_to_send = chooseCommand(request.command_name, commands_for_laser)
+  end
 
   if command_to_send ~= nil then
     if request.command_name == "pos_cmd" then
@@ -329,6 +360,39 @@ local function sendSetCommandHandler(request, response, header)
   return true
 end
 
+local function actionServerGoal()
+  ros.INFO("ActionServer_Goal")
+  --[[
+  if action_server_for_gripper:isActive() then
+    print("Aktiv")
+    local result = action_server_for_gripper:createResult()
+    result.pos_fb = last_pos_fb
+    action_server_for_gripper:setAborted(result, 'Goal Aborted: new goal postion received!')
+  end
+  ]]
+  action_server_for_gripper:acceptNewGoal()
+  local command_to_send = chooseCommand("pos_cmd", commands_for_gripper)
+  local value = action_server_for_gripper:getCurrentGoal().goal.goal_pos
+
+  if value < min_gripper_in_m then
+    value = min_gripper_in_m
+  elseif value > max_gripper_in_m then
+    value = max_gripper_in_m
+  end
+  ros.DEBUG("ActionServer_Goal: new desired position is " .. value)
+
+  desired_goal_pos = value
+  enqueue(command_to_send, convertPosFbFromMeterToByte(value))
+end
+
+local function actionServerCancel()
+  ros.INFO("ActionServer_Cancel")
+  local result = action_server_for_gripper:createResult()
+  result.pos_fb = last_pos_fb
+  ros.DEBUG("ActionServer_Cancel: action was cancelled and position is " .. last_pos_fb)
+  action_server_for_gripper:setPreempted(result, 'cancel')
+end
+
 -- Function in order to do initialization used components (e.g. Services)
 local function init()
 
@@ -341,6 +405,7 @@ local function init()
     publisher_joint_state:shutdown()
     publisher_command_return:shutdown()
     service:shutdown()
+    action_server_for_gripper:shutdown()
     nodehandle:shutdown()
     spinner:stop()
     ros.init('xamla_egomo')
@@ -356,6 +421,11 @@ local function init()
   add_commands_for_gripper()
   gripper_spec = ros.MsgSpec('egomo_msgs/XamlaGripper')
   publisher_gripper = nodehandle:advertise("XamlaGripper", gripper_spec)
+
+  action_server_for_gripper = actionlib.SimpleActionServer(nodehandle, 'gripper_action', 'egomo_msgs/EgomoGripper')
+  action_server_for_gripper:registerGoalCallback(actionServerGoal)
+  action_server_for_gripper:registerPreemptCallback(actionServerCancel)
+  action_server_for_gripper:start()
 
   -- Experimental
   command_return_spec = ros.MsgSpec('std_msgs/Header')
@@ -374,6 +444,9 @@ local function init()
   imu_spec = ros.MsgSpec('geometry_msgs/AccelStamped')
   publisher_imu = nodehandle:advertise("XamlaIOIMU", imu_spec)
 
+  -- Laser --
+  add_commands_for_laser()
+
   -- Joint State Gripper --
   joint_state_spec = ros.MsgSpec('sensor_msgs/JointState')
   publisher_joint_state = nodehandle:advertise("joint_states", joint_state_spec)
@@ -381,6 +454,7 @@ end
 
 local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
   --local previous_position
+  --print(pos_fb)
   local value_in_rad = 0.8 - ((0.8/0.085) * convertPosFbFromByteToMeter(pos_fb))
 
   if value_in_rad < 0 then
@@ -390,8 +464,6 @@ local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
   end
 
   joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
-  -- TODO: Bisher nur Debug
-  --joint_state_message.position:set(torch.DoubleTensor({joint_state}))
 end
 
 -- This function assigns the a value to a field of a message (if possible)
@@ -418,7 +490,19 @@ local function assignValuesToMessage(message, field_name, value, type)
         elseif current_position > max_gripper_in_m then
           current_position = max_gripper_in_m
         end
-        message.pos_fb = math.abs(current_position)
+        message.pos_fb = current_position
+        -- feedback/succeed for action
+        if action_server_for_gripper:isActive() then
+          local feedback_for_action = action_server_for_gripper:createFeeback()
+          feedback_for_action.pos_fb = current_position
+          action_server_for_gripper:publishFeedback(feedback_for_action)
+          last_pos_fb = current_position
+          if compareFloats(current_position, desired_goal_pos, tolerance_for_goal_position) then
+            local result = action_server_for_gripper:createResult()
+            result.pos_fb = current_position
+            action_server_for_gripper:setSucceeded(result, 'Goal succeeded: Gripper has reached goal position +-: ' .. tolerance_for_goal_position * 100 .. "cm" )
+          end
+        end
         return true
       end
     elseif field_name == GRIPPER_LEFT_FINGER_FORCE then
@@ -934,7 +1018,7 @@ end
 -- Checks if any subsriber exists
 local function isAnySubscribed()
   if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0
-    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0 then
+    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0 or action_server_for_gripper:isActive() then
     return true
   end
   return false
@@ -1005,7 +1089,15 @@ local function runUsingProcessData()
   local message_worker = coroutine.create(messageCreationWithProcessData)
   initFileDescriptor(device, false)
 
+  local iteration_counter = 0
+  local ACTIVATE_GC_AFTER_ITERATION = 1000
+
   while true do
+    if iteration_counter == ACTIVATE_GC_AFTER_ITERATION then
+      iteration_counter = 0
+      collectgarbage("collect")
+    end
+
     if not ros.ok() then
       return
     end
@@ -1036,6 +1128,7 @@ local function runUsingProcessData()
       for i,v in ipairs(read_buffer) do
         print(v)
       end
+      --print(desired_goal_pos)
       print("-----------------------------")
     end
 
@@ -1058,6 +1151,7 @@ local function runUsingProcessData()
     -- May increase this value when more messages are added
     sys.sleep(0.005)
     ros.spinOnce()
+    iteration_counter = iteration_counter + 1
   end
 end
 
