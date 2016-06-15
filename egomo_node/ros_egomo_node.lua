@@ -29,6 +29,18 @@ local GRIPPER_LEFT_FINGER_FORCE = "gripper0.left_finger_force"
 -- sets the gripper's right finger force in N
 local GRIPPER_RIGHT_FINGER_FORCE = "gripper0.right_finger_force"
 
+-- Constants for Gripper State--
+
+local GRIPPER_GOTO_REQUEST = 8
+local GRIPPER_IS_ACTIVATED = 48
+local GRIPPER_HAS_OBJECT_OPEN = 64
+local GRIPPER_HAS_OBJECT_CLOSE = 128
+local GRIPPER_HAS_NO_OBJECT = 172
+
+local GRIPPER_OBJECT_DURING_OPEN = bit.bor(GRIPPER_GOTO_REQUEST, GRIPPER_IS_ACTIVATED, GRIPPER_HAS_OBJECT_OPEN)
+local GRIPPER_OBJECT_DURING_CLOSE = bit.bor(GRIPPER_GOTO_REQUEST, GRIPPER_IS_ACTIVATED, GRIPPER_HAS_OBJECT_CLOSE)
+local GRIPPER_HAS_MOVED_BUT_NO_OBJECT = bit.bor(GRIPPER_GOTO_REQUEST, GRIPPER_IS_ACTIVATED, GRIPPER_HAS_OBJECT_CLOSE, GRIPPER_HAS_OBJECT_OPEN)
+
 -- Force Torque commands--
 
 -- reset the force torque (ft) sensor with falling edge 1.0 --> 0.0
@@ -67,7 +79,7 @@ local IMU_DB = "imu0.db"
 -- returns the angular velocity around the z-axis (yaw) (in rad/s)
 local IMU_DC = "imu0.dc"
 
--- Laser commands --
+-- Light emmiters commands --
 local LASER1 = "io0.out0"
 local LASER2 = "io0.out1"
 local LASER3 = "io0.out2"
@@ -75,6 +87,9 @@ local LASER3 = "io0.out2"
 -- ros common
 local spinner
 local nodehandle
+
+local CYCLE_TIME = 0.005
+local BOARD_POLLING_TIME = 0.020
 
 -- forward declaration
 local enqueue
@@ -87,10 +102,12 @@ local service
 local commands_for_gripper = {}
 local send_set_command_spec
 local action_server_for_gripper
--- Actions
+-- Actions --
 local last_pos_fb = 0.0
 local desired_goal_pos = nil
-local tolerance_for_goal_position = 0.0015
+local board_confirmed_pos_cmd = false
+local FILTER_SIZE_FOR_GRIPPER_STATE = math.ceil(BOARD_POLLING_TIME / CYCLE_TIME)
+local filter_counter = 0
 
 local min_gripper_in_m = 0.0
 local max_gripper_in_m = 0.087
@@ -154,18 +171,19 @@ local process_data_position = {
   [GRIPPER_GRIP_FORCE] = 1,
   [GRIPPER_LEFT_FINGER_FORCE] = 2,
   [GRIPPER_RIGHT_FINGER_FORCE] = 3,
-  [FT_X] = 4,
-  [FT_Y] = 5,
-  [FT_Z] = 6,
-  [FT_A] = 7,
-  [FT_B] = 8,
-  [FT_C] = 9,
-  [IMU_A] = 10,
-  [IMU_B] = 11,
-  [IMU_C] = 12,
-  [IMU_DA] = 13,
-  [IMU_DB] = 14,
-  [IMU_DC] = 15
+  [GRIPPER_STATE] = 4,
+  [FT_X] = 5,
+  [FT_Y] = 6,
+  [FT_Z] = 7,
+  [FT_A] = 8,
+  [FT_B] = 9,
+  [FT_C] = 10,
+  [IMU_A] = 11,
+  [IMU_B] = 12,
+  [IMU_C] = 13,
+  [IMU_DA] = 14,
+  [IMU_DB] = 15,
+  [IMU_DC] = 16
 }
 
 -- Hint: order is changed based on indicies. The order of the returned process data is defined by the numbers 0-15
@@ -174,6 +192,7 @@ local config_for_process_data = {
   [GRIPPER_GRIP_FORCE] = config_prefix .. process_data_position[GRIPPER_GRIP_FORCE] .. " = " .. GRIPPER_GRIP_FORCE .. "\n",
   [GRIPPER_LEFT_FINGER_FORCE] = config_prefix .. process_data_position[GRIPPER_LEFT_FINGER_FORCE] .. " = " .. GRIPPER_LEFT_FINGER_FORCE .. "\n",
   [GRIPPER_RIGHT_FINGER_FORCE] = config_prefix .. process_data_position[GRIPPER_RIGHT_FINGER_FORCE] .. " = " .. GRIPPER_RIGHT_FINGER_FORCE .. "\n",
+  [GRIPPER_STATE] = config_prefix .. process_data_position[GRIPPER_STATE] .. " = " .. GRIPPER_STATE .. "\n",
   [FT_X] = config_prefix .. process_data_position[FT_X] .. " = " .. FT_X .. "\n",
   [FT_Y] = config_prefix .. process_data_position[FT_Y] .. " = " .. FT_Y .. "\n",
   [FT_Z] = config_prefix .. process_data_position[FT_Z] .. " = " .. FT_Z .. "\n",
@@ -240,9 +259,6 @@ local function add_commands_for_laser()
 end
 
 local function convertPosFbFromByteToMeter(value)
-  if value > 230 then
-    value = 230.0
-  end
   return 0.087 / (3.0 - 230.0) * (value - 230.0) -- TODO: Has to be validated
 end
 
@@ -298,13 +314,6 @@ local function findDevice(id_vendor, id_product)
   return found
 end
 
-local function compareFloats(a, b, epsilon)
-  local a = math.abs(a)
-  local b = math.abs(b)
-  local diff = math.abs(a - b)
-  return diff < epsilon
-end
-
 -- This function searches for egomo devices
 -- Output:
 --  devices - Table containing all devices
@@ -331,7 +340,7 @@ local function chooseCommand(command, command_list)
 end
 
 -- Handler for service SendSetCommand
-local function sendSetCommandHandler(request, response, header)
+local function sendCommandHandler(request, response, header)
   local command_to_send = chooseCommand(request.command_name, commands_for_gripper)
   if command_to_send == nil then
     command_to_send = chooseCommand(request.command_name, commands_for_laser)
@@ -360,16 +369,36 @@ local function sendSetCommandHandler(request, response, header)
   return true
 end
 
+local function isObjectGripped(state)
+  if bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_OPEN) == GRIPPER_OBJECT_DURING_OPEN then
+    return true
+  elseif bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_CLOSE) == GRIPPER_OBJECT_DURING_CLOSE then
+    return true
+  else
+    return false
+  end
+end
+
+local function isGoalReached(state)
+  local result = action_server_for_gripper:createResult()
+  result.pos_fb = last_pos_fb
+  local text = nil
+  if bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_OPEN) == GRIPPER_OBJECT_DURING_OPEN then
+    text = "Goal succeeded: Gripper has gripped object during opening."
+    return result, text
+  elseif bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_CLOSE) == GRIPPER_OBJECT_DURING_CLOSE then --
+    text = "Goal succeeded: Gripper has gripped object during closing."
+    return result, text
+  elseif bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) == GRIPPER_HAS_MOVED_BUT_NO_OBJECT then
+    text = "Goal succeeded: Gripper has reached requested position."
+    return result, text
+  else
+    return nil, nil
+  end
+end
+
 local function actionServerGoal()
   ros.INFO("ActionServer_Goal")
-  --[[
-  if action_server_for_gripper:isActive() then
-    print("Aktiv")
-    local result = action_server_for_gripper:createResult()
-    result.pos_fb = last_pos_fb
-    action_server_for_gripper:setAborted(result, 'Goal Aborted: new goal postion received!')
-  end
-  ]]
   action_server_for_gripper:acceptNewGoal()
   local command_to_send = chooseCommand("pos_cmd", commands_for_gripper)
   local value = action_server_for_gripper:getCurrentGoal().goal.goal_pos
@@ -380,9 +409,13 @@ local function actionServerGoal()
     value = max_gripper_in_m
   end
   ros.DEBUG("ActionServer_Goal: new desired position is " .. value)
-
   desired_goal_pos = value
   enqueue(command_to_send, convertPosFbFromMeterToByte(value))
+
+  if action_server_for_gripper:getCurrentGoal().goal.set_speed_and_force ~= 0 then
+    enqueue(chooseCommand(GRIPPER_MAX_SPEED, commands_for_gripper), action_server_for_gripper:getCurrentGoal().goal.speed)
+    enqueue(chooseCommand(GRIPPER_MAX_FORCE, commands_for_gripper), action_server_for_gripper:getCurrentGoal().goal.force)
+  end
 end
 
 local function actionServerCancel()
@@ -391,11 +424,12 @@ local function actionServerCancel()
   result.pos_fb = last_pos_fb
   ros.DEBUG("ActionServer_Cancel: action was cancelled and position is " .. last_pos_fb)
   action_server_for_gripper:setPreempted(result, 'cancel')
+  board_confirmed_pos_cmd = false
+  filter_counter = 0
 end
 
 -- Function in order to do initialization used components (e.g. Services)
 local function init()
-
   if not is_reconnected then
     ros.init('xamla_egomo')
   else
@@ -410,6 +444,12 @@ local function init()
     spinner:stop()
     ros.init('xamla_egomo')
     print("Node reconnected to master...")
+  end
+
+  if CYCLE_TIME < BOARD_POLLING_TIME then
+    FILTER_SIZE_FOR_GRIPPER_STATE = math.ceil(BOARD_POLLING_TIME / CYCLE_TIME)
+  else
+    FILTER_SIZE_FOR_GRIPPER_STATE = 1
   end
 
   spinner = ros.AsyncSpinner()
@@ -431,8 +471,8 @@ local function init()
   command_return_spec = ros.MsgSpec('std_msgs/Header')
   publisher_command_return = nodehandle:advertise("XamlaGripperCommandReturn", command_return_spec)
 
-  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendGripperSetCommand')
-  service = nodehandle:advertiseService('egomo_msgs/SendGripperSetCommand', send_set_command_spec, sendSetCommandHandler)
+  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendCommand')
+  service = nodehandle:advertiseService('egomo_msgs/SendCommand', send_set_command_spec, sendCommandHandler)
 
   -- Force Torque --
   add_commands_for_force_torque()
@@ -491,17 +531,12 @@ local function assignValuesToMessage(message, field_name, value, type)
           current_position = max_gripper_in_m
         end
         message.pos_fb = current_position
-        -- feedback/succeed for action
+        -- feedback for action
         if action_server_for_gripper:isActive() then
           local feedback_for_action = action_server_for_gripper:createFeeback()
           feedback_for_action.pos_fb = current_position
           action_server_for_gripper:publishFeedback(feedback_for_action)
           last_pos_fb = current_position
-          if compareFloats(current_position, desired_goal_pos, tolerance_for_goal_position) then
-            local result = action_server_for_gripper:createResult()
-            result.pos_fb = current_position
-            action_server_for_gripper:setSucceeded(result, 'Goal succeeded: Gripper has reached goal position +-: ' .. tolerance_for_goal_position * 100 .. "cm" )
-          end
         end
         return true
       end
@@ -510,6 +545,22 @@ local function assignValuesToMessage(message, field_name, value, type)
       return true
     elseif field_name == GRIPPER_RIGHT_FINGER_FORCE then
       message.right_finger_force = value
+      return true
+    elseif field_name == GRIPPER_STATE then
+      message.state = value
+      message.object_gripped = isObjectGripped(value)
+      if action_server_for_gripper:isActive() and board_confirmed_pos_cmd then
+        if filter_counter >= FILTER_SIZE_FOR_GRIPPER_STATE then
+          local result, text = isGoalReached(value)
+          if result ~= nil then
+            action_server_for_gripper:setSucceeded(result, text)
+            board_confirmed_pos_cmd = false
+            filter_counter = 0
+          end
+        else
+          filter_counter = filter_counter + 1
+        end
+      end
       return true
     else
       return false
@@ -693,7 +744,6 @@ end
 --  command - Command which is used for comparision
 -- Output:
 --  type - The type to which the command belongs to (Gripper, FT, IMU)
-
 local function getType(command)
   for i,v in ipairs(commands_for_gripper) do
     if command == v then
@@ -754,6 +804,11 @@ local function buildXamlaMessageBasedOnProcessData()
               assignValuesToMessage(message_imu, i, values[process_data_position[i]+1], type)
             end
           end
+        end
+      elseif string.byte(line,1) == char_byte_table["O"] and string.byte(line,2) == char_byte_table["K"] then
+        local command, value = parseData(line, commands_for_gripper, {})
+        if command == GRIPPER_POS_CMD and action_server_for_gripper:isActive() then
+          board_confirmed_pos_cmd = true -- identify in order to define when action goal is reached
         end
       else
         local return_message = ros.Message('std_msgs/Header')
@@ -1149,7 +1204,7 @@ local function runUsingProcessData()
     end
     -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
     -- May increase this value when more messages are added
-    sys.sleep(0.005)
+    sys.sleep(CYCLE_TIME)
     ros.spinOnce()
     iteration_counter = iteration_counter + 1
   end
@@ -1240,7 +1295,7 @@ local function run()
     end
     -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
     -- May increase this value when more messages are added
-    sys.sleep(0.005)
+    sys.sleep(CYCLE_TIME)
     ros.spinOnce()
   end
 end
