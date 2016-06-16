@@ -101,13 +101,18 @@ local publisher_gripper
 local service
 local commands_for_gripper = {}
 local send_set_command_spec
-local action_server_for_gripper
+local action_server_for_gripper_pos
+local action_server_for_gripper_activation
+
 -- Actions --
-local last_pos_fb = 0.0
+local last_pos_fb = -1
+local last_state = -1
 local desired_goal_pos = nil
 local board_confirmed_pos_cmd = false
+local board_confirmed_activation_cmd = false
 local FILTER_SIZE_FOR_GRIPPER_STATE = math.ceil(BOARD_POLLING_TIME / CYCLE_TIME)
-local filter_counter = 0
+local filter_counter_pos_cmd = 0
+local filter_counter_activation = 0
 
 local min_gripper_in_m = 0.0
 local max_gripper_in_m = 0.087
@@ -379,9 +384,10 @@ local function isObjectGripped(state)
   end
 end
 
-local function isGoalReached(state)
-  local result = action_server_for_gripper:createResult()
+local function isGoalPosReached(state)
+  local result = action_server_for_gripper_pos:createResult()
   result.pos_fb = last_pos_fb
+  result.object_gripped = isObjectGripped(state)
   local text = nil
   if bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_OPEN) == GRIPPER_OBJECT_DURING_OPEN then
     text = "Goal succeeded: Gripper has gripped object during opening."
@@ -397,36 +403,69 @@ local function isGoalReached(state)
   end
 end
 
-local function actionServerGoal()
-  ros.INFO("ActionServer_Goal")
-  action_server_for_gripper:acceptNewGoal()
+local function isGripperActivated(state)
+  local result = action_server_for_gripper_activation:createResult()
+  local text = nil
+  if bit.band(state, GRIPPER_IS_ACTIVATED) == GRIPPER_IS_ACTIVATED then
+    result.is_activated = true
+    text = "Goal succeeded: Gripper has been activated."
+    return result, text
+  end
+  return nil, nil
+end
+
+local function actionServerPosGoal()
+  ros.INFO("ActionServerPos_Goal")
+  action_server_for_gripper_pos:acceptNewGoal()
   local command_to_send = chooseCommand("pos_cmd", commands_for_gripper)
-  local value = action_server_for_gripper:getCurrentGoal().goal.goal_pos
+  local value = action_server_for_gripper_pos:getCurrentGoal().goal.goal_pos
 
   if value < min_gripper_in_m then
     value = min_gripper_in_m
   elseif value > max_gripper_in_m then
     value = max_gripper_in_m
   end
-  ros.DEBUG("ActionServer_Goal: new desired position is " .. value)
+  ros.DEBUG("ActionServerPos_Goal: new desired position is " .. value)
   desired_goal_pos = value
   enqueue(command_to_send, convertPosFbFromMeterToByte(value))
 
-  if action_server_for_gripper:getCurrentGoal().goal.set_speed_and_force ~= 0 then
-    enqueue(chooseCommand(GRIPPER_MAX_SPEED, commands_for_gripper), action_server_for_gripper:getCurrentGoal().goal.speed)
-    enqueue(chooseCommand(GRIPPER_MAX_FORCE, commands_for_gripper), action_server_for_gripper:getCurrentGoal().goal.force)
+  if action_server_for_gripper_pos:getCurrentGoal().goal.set_speed_and_force ~= 0 then
+    enqueue(chooseCommand(GRIPPER_MAX_SPEED, commands_for_gripper), action_server_for_gripper_pos:getCurrentGoal().goal.speed)
+    enqueue(chooseCommand(GRIPPER_MAX_FORCE, commands_for_gripper), action_server_for_gripper_pos:getCurrentGoal().goal.force)
   end
 end
 
-local function actionServerCancel()
-  ros.INFO("ActionServer_Cancel")
-  local result = action_server_for_gripper:createResult()
+local function actionServerPosCancel()
+  ros.INFO("ActionServerPos_Cancel")
+  local result = action_server_for_gripper_pos:createResult()
   result.pos_fb = last_pos_fb
-  ros.DEBUG("ActionServer_Cancel: action was cancelled and position is " .. last_pos_fb)
-  action_server_for_gripper:setPreempted(result, 'cancel')
+  result.object_gripped = isObjectGripped(last_state)
+  ros.DEBUG("ActionServerPos_Cancel: action was cancelled and position is " .. last_pos_fb)
+  action_server_for_gripper_pos:setPreempted(result, 'cancel')
   board_confirmed_pos_cmd = false
-  filter_counter = 0
+  filter_counter_pos_cmd = 0
 end
+
+local function actionServerActivationGoal()
+  ros.INFO("ActionServerActivation_Goal")
+  action_server_for_gripper_activation:acceptNewGoal()
+  if action_server_for_gripper_activation:getCurrentGoal().goal.activate == 1 then
+    local command_to_send = chooseCommand("reset", commands_for_gripper)
+    enqueue(command_to_send, 1)
+    enqueue(command_to_send, 0)
+  end
+end
+
+local function actionServerActivationCancel()
+  ros.INFO("ActionServerActivation_Cancel")
+  local result = action_server_for_gripper_activation:createResult()
+  result.is_activated = false
+  ros.DEBUG("ActionServerActivation_Cancel: action was cancelled and activation is " .. tostring(result.is_activated))
+  action_server_for_gripper_activation:setPreempted(result, 'cancel')
+  board_confirmed_activation_cmd = false
+  filter_counter_activation = 0
+end
+
 
 -- Function in order to do initialization used components (e.g. Services)
 local function init()
@@ -439,7 +478,8 @@ local function init()
     publisher_joint_state:shutdown()
     publisher_command_return:shutdown()
     service:shutdown()
-    action_server_for_gripper:shutdown()
+    action_server_for_gripper_pos:shutdown()
+    action_server_for_gripper_activation:shutdown()
     nodehandle:shutdown()
     spinner:stop()
     ros.init('xamla_egomo')
@@ -460,29 +500,34 @@ local function init()
   -- Gripper --
   add_commands_for_gripper()
   gripper_spec = ros.MsgSpec('egomo_msgs/XamlaGripper')
-  publisher_gripper = nodehandle:advertise("XamlaGripper", gripper_spec)
+  publisher_gripper = nodehandle:advertise("XamlaEgomo/XamlaGripper", gripper_spec)
 
-  action_server_for_gripper = actionlib.SimpleActionServer(nodehandle, 'gripper_action', 'egomo_msgs/EgomoGripper')
-  action_server_for_gripper:registerGoalCallback(actionServerGoal)
-  action_server_for_gripper:registerPreemptCallback(actionServerCancel)
-  action_server_for_gripper:start()
+  action_server_for_gripper_pos = actionlib.SimpleActionServer(nodehandle, 'XamlaEgomo/gripper_pos_action', 'egomo_msgs/EgomoGripperPos')
+  action_server_for_gripper_pos:registerGoalCallback(actionServerPosGoal)
+  action_server_for_gripper_pos:registerPreemptCallback(actionServerPosCancel)
+  action_server_for_gripper_pos:start()
+
+  action_server_for_gripper_activation = actionlib.SimpleActionServer(nodehandle, 'XamlaEgomo/gripper_activation_action', 'egomo_msgs/EgomoGripperActivate')
+  action_server_for_gripper_activation:registerGoalCallback(actionServerActivationGoal)
+  action_server_for_gripper_activation:registerPreemptCallback(actionServerActivationCancel)
+  action_server_for_gripper_activation:start()
 
   -- Experimental
   command_return_spec = ros.MsgSpec('std_msgs/Header')
-  publisher_command_return = nodehandle:advertise("XamlaGripperCommandReturn", command_return_spec)
+  publisher_command_return = nodehandle:advertise("XamlaEgomo/XamlaGripperCommandReturn", command_return_spec)
 
   send_set_command_spec = ros.SrvSpec('egomo_msgs/SendCommand')
-  service = nodehandle:advertiseService('egomo_msgs/SendCommand', send_set_command_spec, sendCommandHandler)
+  service = nodehandle:advertiseService('XamlaEgomo/SendCommand', send_set_command_spec, sendCommandHandler)
 
   -- Force Torque --
   add_commands_for_force_torque()
   force_torque_spec = ros.MsgSpec('geometry_msgs/WrenchStamped')
-  publisher_force_torque = nodehandle:advertise("XamlaForceTorque", force_torque_spec)
+  publisher_force_torque = nodehandle:advertise("XamlaEgomo/XamlaForceTorque", force_torque_spec)
 
   -- IMU --
   add_commands_for_imu()
   imu_spec = ros.MsgSpec('geometry_msgs/AccelStamped')
-  publisher_imu = nodehandle:advertise("XamlaIOIMU", imu_spec)
+  publisher_imu = nodehandle:advertise("XamlaEgomo/XamlaIOIMU", imu_spec)
 
   -- Laser --
   add_commands_for_laser()
@@ -504,6 +549,53 @@ local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
   end
 
   joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
+end
+
+local function createActionFeedbackGripperPos(pos_fb, state)
+  local feedback_for_action = action_server_for_gripper_pos:createFeeback()
+  feedback_for_action.pos_fb = pos_fb
+  feedback_for_action.object_gripped = isObjectGripped(state)
+  action_server_for_gripper_pos:publishFeedback(feedback_for_action)
+  last_pos_fb = pos_fb
+end
+
+local function checkGripperPosGoalSucceeded(state)
+  if filter_counter_pos_cmd >= FILTER_SIZE_FOR_GRIPPER_STATE then
+    local result, text = isGoalPosReached(state)
+    if result ~= nil then
+      action_server_for_gripper_pos:setSucceeded(result, text)
+      board_confirmed_pos_cmd = false
+      filter_counter_pos_cmd = 0
+    end
+  else
+    filter_counter_pos_cmd = filter_counter_pos_cmd + 1
+  end
+end
+
+local function createActionFeedbackActivation(state)
+  if filter_counter_activation >= FILTER_SIZE_FOR_GRIPPER_STATE then
+    local feedback_for_action = action_server_for_gripper_activation:createFeeback()
+    local result, text = isGripperActivated(state)
+    if result ~= nil then
+      feedback_for_action.is_activated = true
+    else
+      feedback_for_action.is_activated = false
+    end
+    action_server_for_gripper_activation:publishFeedback(feedback_for_action)
+  end
+end
+
+local function checkGripperActivationGoalSucceeded(state)
+  if filter_counter_activation >= FILTER_SIZE_FOR_GRIPPER_STATE then
+    local result, text = isGripperActivated(state)
+    if result ~= nil then
+      action_server_for_gripper_activation:setSucceeded(result, text)
+      board_confirmed_activation_cmd = false
+      filter_counter_activation = 0
+    end
+  else
+    filter_counter_activation = filter_counter_activation + 1
+  end
 end
 
 -- This function assigns the a value to a field of a message (if possible)
@@ -531,12 +623,9 @@ local function assignValuesToMessage(message, field_name, value, type)
           current_position = max_gripper_in_m
         end
         message.pos_fb = current_position
-        -- feedback for action
-        if action_server_for_gripper:isActive() then
-          local feedback_for_action = action_server_for_gripper:createFeeback()
-          feedback_for_action.pos_fb = current_position
-          action_server_for_gripper:publishFeedback(feedback_for_action)
-          last_pos_fb = current_position
+        -- feedback for action pos
+        if action_server_for_gripper_pos:isActive() then
+          createActionFeedbackGripperPos(current_position, last_state)
         end
         return true
       end
@@ -549,17 +638,15 @@ local function assignValuesToMessage(message, field_name, value, type)
     elseif field_name == GRIPPER_STATE then
       message.state = value
       message.object_gripped = isObjectGripped(value)
-      if action_server_for_gripper:isActive() and board_confirmed_pos_cmd then
-        if filter_counter >= FILTER_SIZE_FOR_GRIPPER_STATE then
-          local result, text = isGoalReached(value)
-          if result ~= nil then
-            action_server_for_gripper:setSucceeded(result, text)
-            board_confirmed_pos_cmd = false
-            filter_counter = 0
-          end
-        else
-          filter_counter = filter_counter + 1
-        end
+      last_state = value
+      -- Check if gripper goal has been reached
+      if action_server_for_gripper_pos:isActive() and board_confirmed_pos_cmd then
+        checkGripperPosGoalSucceeded(value)
+      end
+      -- Create feedback for gripper activation
+      if action_server_for_gripper_activation:isActive() and board_confirmed_activation_cmd then
+        createActionFeedbackActivation(value)
+        checkGripperActivationGoalSucceeded(value)
       end
       return true
     else
@@ -807,8 +894,10 @@ local function buildXamlaMessageBasedOnProcessData()
         end
       elseif string.byte(line,1) == char_byte_table["O"] and string.byte(line,2) == char_byte_table["K"] then
         local command, value = parseData(line, commands_for_gripper, {})
-        if command == GRIPPER_POS_CMD and action_server_for_gripper:isActive() then
-          board_confirmed_pos_cmd = true -- identify in order to define when action goal is reached
+        if command == GRIPPER_POS_CMD and action_server_for_gripper_pos:isActive() then
+          board_confirmed_pos_cmd = true -- identify in order to define when action goal (pos_cmd) is reached
+        elseif command == GRIPPER_RESET and action_server_for_gripper_activation:isActive() then
+          board_confirmed_activation_cmd = true -- identify in order to define when action goal (activation) is reached
         end
       else
         local return_message = ros.Message('std_msgs/Header')
@@ -1073,7 +1162,8 @@ end
 -- Checks if any subsriber exists
 local function isAnySubscribed()
   if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0
-    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0 or action_server_for_gripper:isActive() then
+    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0
+    or action_server_for_gripper_pos:isActive() or action_server_for_gripper_activation:isActive() then
     return true
   end
   return false

@@ -6,6 +6,8 @@ uint8 force
 ---
 #result definition
 float32 pos_fb
+bool object_gripped
 ---
 #feedback
 float32 pos_fb
+bool object_gripped
