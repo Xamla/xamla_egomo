@@ -483,7 +483,6 @@ local function actionServerActivationCancel()
   filter_counter_activation = 0
 end
 
-
 -- Function in order to do initialization used components (e.g. Services)
 local function init()
   if not is_reconnected then
@@ -759,11 +758,9 @@ end
 --  values - The corresponding value as a number (e.g. 1.004)
 local function parseProcessData(line)
   local values = {}
-
   for value in string.gmatch(string.sub(line,2,-2),'[^,]+') do
     values[#values+1] = tonumber(value)
   end
-
   return values
 end
 
@@ -1089,7 +1086,6 @@ local function read()
         unfinished_line_buffer = read_buffer[#read_buffer]
         table.remove(read_buffer,#read_buffer)
       end
-
       ros.DEBUG("READER: job done yield now")
     else
       ros.DEBUG("READER: job unfinished yield now")
