@@ -12,7 +12,7 @@ local posix = require "posix"
 
 -- reset the gripper with falling edge 1.0 --> 0.0
 local GRIPPER_RESET = "gripper0.reset"
--- sets the position of the gripper in mm (range?)
+-- sets the position of the gripper in m
 local GRIPPER_POS_CMD = "gripper0.pos_cmd"
 -- sets the gripper's maximum force in N (range?)
 local GRIPPER_MAX_FORCE = "gripper0.max_force"
@@ -80,9 +80,16 @@ local IMU_DB = "imu0.db"
 local IMU_DC = "imu0.dc"
 
 -- Light emmiters commands --
-local LASER1 = "io0.out0"
-local LASER2 = "io0.out1"
-local LASER3 = "io0.out2"
+local LIGHT1 = "io0.out0"
+local LIGHT2 = "io0.out1"
+local LIGHT3 = "io0.out2"
+
+-- If you use an alias make sure that all components are connect to the correct board outputs
+local alias_for_light_pins = {
+  ["led"] = LIGHT1,
+  ["ir-led"] = LIGHT2,
+  ["laser"] = LIGHT3
+}
 
 -- ros common
 local spinner
@@ -130,7 +137,8 @@ local imu_spec
 local publisher_imu
 local commands_for_imu = {}
 
-local commands_for_laser = {}
+-- Light --
+local commands_for_light = {}
 
 -- Joint State Gripper --
 local joint_state_spec
@@ -254,20 +262,20 @@ local function add_commands_for_imu()
   }
 end
 
-local function add_commands_for_laser()
-  commands_for_laser = {
-    LASER1,
-    LASER2,
-    LASER3
+local function add_commands_for_light()
+  commands_for_light = {
+    LIGHT1,
+    LIGHT2,
+    LIGHT3
   }
 end
 
 local function convertPosFbFromByteToMeter(value)
-  return 0.087 / (3.0 - 230.0) * (value - 230.0) -- TODO: Has to be validated
+  return 0.087 / (3.0 - 230.0) * (value - 230.0)
 end
 
 local function convertPosFbFromMeterToByte(value)
-  return math.floor((3.0-230.0)/0.087 * value + 230.0) -- TODO: Has to be validated
+  return math.floor((3.0-230.0)/0.087 * value + 230.0)
 end
 
 -- This function searches for devices in order to get possible paths for read/write
@@ -324,7 +332,6 @@ end
 local function getEgomoDevices()
   local vendor_id = "0483"
   local product_id = "5740"
-
   return findDevice(vendor_id, product_id)
 end
 
@@ -335,19 +342,24 @@ end
 -- Ouput:
 --  v - The corresponding command (e.g. "gripper0.reset")
 local function chooseCommand(command, command_list)
-  for i,v in ipairs(command_list) do
-    if string.find(v,command) then
-      return v
+  if command ~= nil then
+    for i,v in ipairs(command_list) do
+      if string.find(v,command) then
+        return v
+      end
     end
   end
   return nil
 end
 
--- Handler for service SendSetCommand
+-- Handler for service SendCommand
 local function sendCommandHandler(request, response, header)
   local command_to_send = chooseCommand(request.command_name, commands_for_gripper)
   if command_to_send == nil then
-    command_to_send = chooseCommand(request.command_name, commands_for_laser)
+    command_to_send = chooseCommand(request.command_name, commands_for_light)
+    if command_to_send == nil then
+      command_to_send = chooseCommand(alias_for_light_pins[request.command_name], commands_for_light)
+    end
   end
 
   if command_to_send ~= nil then
@@ -459,7 +471,6 @@ local function actionServerActivationGoal()
   else
     enqueue(command_to_send, 1)
   end
-
 end
 
 local function actionServerActivationCancel()
@@ -536,7 +547,7 @@ local function init()
   publisher_imu = nodehandle:advertise("XamlaEgomo/XamlaIOIMU", imu_spec)
 
   -- Laser --
-  add_commands_for_laser()
+  add_commands_for_light()
 
   -- Joint State Gripper --
   joint_state_spec = ros.MsgSpec('sensor_msgs/JointState')
@@ -544,8 +555,6 @@ local function init()
 end
 
 local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
-  --local previous_position
-  --print(pos_fb)
   local value_in_rad = 0.8 - ((0.8/0.085) * convertPosFbFromByteToMeter(pos_fb))
 
   if value_in_rad < 0 then
@@ -553,7 +562,6 @@ local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
   elseif value_in_rad > 0.8 then
     value_in_rad = 0.8
   end
-
   joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
 end
 
@@ -649,7 +657,7 @@ local function assignValuesToMessage(message, field_name, value, type)
       if action_server_for_gripper_pos:isActive() and board_confirmed_pos_cmd then
         checkGripperPosGoalSucceeded(value)
       end
-      -- Create feedback for gripper activation
+      -- Create feedback for gripper activation and check if goal is reached
       if action_server_for_gripper_activation:isActive() and board_confirmed_activation_cmd then
         createActionFeedbackActivation(value)
         checkGripperActivationGoalSucceeded(value)
@@ -759,80 +767,7 @@ local function parseProcessData(line)
   return values
 end
 
--- This function is responsible for creating and publishing the messages based on the read data (single line protocol).
--- Notice: only one message is sent even when enough data is received for more messages. Due to blacklist concept values which
--- have been set already won't be replace by newer values. This might lead to that some values will be discarded. Use process data
--- concept to prevent discarding values.
--- Input:
---  type - Defines the type of the message (e.g. GRIPPER, FORCE_TORQUE, IMU)
-local function buildXamlaMessage(type)
-  local message
-  local MESSAGE_PARAMETERS
-  local used_command_list
-  local used_publisher
-  local number_of_set_parameters = 0
-  local blacklist = {}
-
-  -- Initialize components based on type
-  if type == GRIPPER then
-    message = ros.Message('egomo_msgs/XamlaGripper')
-    MESSAGE_PARAMETERS = 4
-    used_command_list = commands_for_gripper
-    used_publisher = publisher_gripper
-  elseif type == FORCE_TORQUE then
-    message = ros.Message('geometry_msgs/WrenchStamped')
-    MESSAGE_PARAMETERS = 6
-    used_command_list = commands_for_force_torque
-    used_publisher = publisher_force_torque
-  elseif type == IMU then
-    message = ros.Message('geometry_msgs/AccelStamped')
-    MESSAGE_PARAMETERS = 6
-    used_command_list = commands_for_imu
-    used_publisher = publisher_imu
-  end
-
-  message.header.frame_id = "ee_link"
-
-  while true do
-    for i,line in ipairs(read_buffer) do
-      -- Skip line if it is answer of an previous set command
-      if string.byte(line,1) ~= char_byte_table["O"] and string.byte(line,2) ~= char_byte_table["K"] then
-        -- Inspect the line and look for corresponding field and value
-        local field_name, value = parseData(line, used_command_list, blacklist)
-        if field_name ~= nil and value ~= nil then
-          -- Try to assign the value to the given field
-          if assignValuesToMessage(message, field_name, value, type) then
-            table.insert(blacklist, field_name)
-            number_of_set_parameters = number_of_set_parameters + 1;
-          end
-        end
-      else
-        local return_message = ros.Message('std_msgs/Header')
-        return_message.seq = call_sequence
-        call_sequence = call_sequence + 1
-        return_message.stamp = ros.Time.now()
-        return_message.frame_id = line
-        publisher_command_return:publish(return_message)
-      end
-    end
-
-    -- If message is complete publish message
-    if number_of_set_parameters == MESSAGE_PARAMETERS then
-      message.header.stamp = ros.Time.now()
-      used_publisher:publish(message)
-      blacklist = {}
-      number_of_set_parameters = 0
-      ros.DEBUG("XAMLA_" .. types_string[type] .. ": Message send yield now")
-      coroutine.yield()
-    else
-      ros.DEBUG("XAMLA_" .. types_string[type] .. ": Message unfinished yield now")
-      coroutine.yield()
-    end
-  end
-end
-
 -- This function checks whether the input is a valid command and returns the type
-
 -- Input:
 --  command - Command which is used for comparision
 -- Output:
@@ -850,7 +785,7 @@ local function getType(command)
   end
   for i,v in ipairs(commands_for_imu) do
     if command == v then
-      return FORCE_TORQUE
+      return IMU
     end
   end
   return nil
@@ -951,7 +886,6 @@ end
 -- Input:
 --  device - path or device (e.g. "/dev/ttyACM0")
 local function initFileDescriptor(device, error_on_read_write)
-
   -- Scans for devices of type egomo IO board
   local devices = getEgomoDevices()
 
@@ -1157,7 +1091,6 @@ local function read()
       end
 
       ros.DEBUG("READER: job done yield now")
-      -- coroutine.yield() neccesarry when device is sending data continously
     else
       ros.DEBUG("READER: job unfinished yield now")
       coroutine.yield()
@@ -1165,7 +1098,7 @@ local function read()
   end
 end
 
--- Checks if any subsriber exists
+-- Checks if any subscriber exists or an action is active
 local function isAnySubscribed()
   if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0
     or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0
@@ -1195,46 +1128,8 @@ local function messageCreationWithProcessData()
   end
 end
 
--- This function initiates the creation of the different messages
-local function messageCreation()
-  local xamla_gripper_worker = coroutine.create(buildXamlaMessage)
-  local xamla_ft_worker = coroutine.create(buildXamlaMessage)
-  local xamla_imu_worker = coroutine.create(buildXamlaMessage)
-
-  while true do
-    if publisher_gripper:getNumSubscribers() > 0 then
-      coroutine.resume(xamla_gripper_worker, GRIPPER)
-    end
-    if publisher_force_torque:getNumSubscribers() > 0 then
-      coroutine.resume(xamla_ft_worker, FORCE_TORQUE)
-    end
-    if publisher_imu:getNumSubscribers() > 0 then
-      coroutine.resume(xamla_imu_worker, IMU)
-    end
-
-    ros.DEBUG("MESSAGE CREATION: resumed all worker yield now")
-    coroutine.yield()
-
-    -- Create new coroutine in case coroutine died
-    if coroutine.status(xamla_gripper_worker) == "dead" then
-      ros.WARN("GRIPPER WORKER died and will be reinitialized")
-      xamla_gripper_worker = coroutine.create(buildXamlaMessage)
-    end
-
-    if coroutine.status(xamla_ft_worker) == "dead"  then
-      ros.WARN("FORCE TORQUE WORKER died and will be reinitialized")
-      xamla_ft_worker = coroutine.create(buildXamlaMessage)
-    end
-
-    if coroutine.status(xamla_imu_worker) == "dead"  then
-      ros.WARN("IMU WORKER died and will be reinitialized")
-      xamla_imu_worker = coroutine.create(buildXamlaMessage)
-    end
-  end
-end
-
 -- Main loop using process data protocoll
-local function runUsingProcessData()
+local function run()
   local write_worker = coroutine.create(write)
   local reader_worker = coroutine.create(read)
   local message_worker = coroutine.create(messageCreationWithProcessData)
@@ -1305,97 +1200,6 @@ local function runUsingProcessData()
   end
 end
 
--- Main loop using the single line protocol
-local function run()
-  local write_worker = coroutine.create(write)
-  local reader_worker = coroutine.create(read)
-  local message_worker = coroutine.create(messageCreation)
-  initFileDescriptor(device, false)
-
-  while true do
-    if not ros.ok() then
-      return
-    end
-
-    if not ros.master.check() then
-      print("Master down trying to reconnect...")
-      while not ros.master.check() do
-        sys.sleep(0.5)
-      end
-      is_reconnected = true
-      init()
-    end
-
-    if publisher_gripper:getNumSubscribers() == 0 then
-      ros.DEBUG('gripper waiting for subscriber')
-    else
-      enqueue(GRIPPER_POS_FB)
-      enqueue(GRIPPER_GRIP_FORCE)
-      enqueue(GRIPPER_LEFT_FINGER_FORCE)
-      enqueue(GRIPPER_RIGHT_FINGER_FORCE)
-    end
-
-    if publisher_force_torque:getNumSubscribers() == 0 then -- TODO: Wenn keine Nachricht gesendet wird, dann wird nicht unsubscribed?
-      ros.DEBUG('force torque waiting for subscriber')
-    else
-      enqueue(FT_X)
-      enqueue(FT_Y)
-      enqueue(FT_Z)
-      enqueue(FT_A)
-      enqueue(FT_B)
-      enqueue(FT_C)
-    end
-
-    if publisher_imu:getNumSubscribers() == 0 then
-      ros.DEBUG('imu waiting for subscriber')
-    else
-      enqueue(IMU_A)
-      enqueue(IMU_B)
-      enqueue(IMU_C)
-      enqueue(IMU_DA)
-      enqueue(IMU_DB)
-      enqueue(IMU_DC)
-    end
-
-    coroutine.resume(write_worker)
-    coroutine.resume(reader_worker)
-
-    if is_reconnected then
-      message_worker = coroutine.create(messageCreation)
-      is_reconnected = false
-    end
-    coroutine.resume(message_worker)
-
-    if debug then
-      for i,v in ipairs(read_buffer) do
-        print(v)
-      end
-      print("----------------------------")
-    end
-
-    -- Clear the read buffer
-    read_buffer = {}
-
-    if coroutine.status(write_worker) == "dead" then
-      ros.WARN("WRITER WORKER died and will be reinitialized")
-      write_worker = coroutine.create(write)
-    end
-    if coroutine.status(reader_worker) == "dead" then
-      ros.WARN("READER WORKER died and will be reinitialized")
-      reader_worker = coroutine.create(read)
-    end
-    if coroutine.status(message_worker) == "dead" then
-      ros.WARN("MESSAGE WORKER died and will be reinitialized")
-      message_worker = coroutine.create(messageCreation)
-    end
-    -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
-    -- May increase this value when more messages are added
-    sys.sleep(CYCLE_TIME)
-    ros.spinOnce()
-  end
-end
-
 init()
-runUsingProcessData()
--- run() -- use this function for the old protocol
+run()
 ros.shutdown()
