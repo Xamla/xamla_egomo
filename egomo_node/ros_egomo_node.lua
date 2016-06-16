@@ -107,7 +107,6 @@ local action_server_for_gripper_activation
 -- Actions --
 local last_pos_fb = -1
 local last_state = -1
-local desired_goal_pos = nil
 local board_confirmed_pos_cmd = false
 local board_confirmed_activation_cmd = false
 local FILTER_SIZE_FOR_GRIPPER_STATE = math.ceil(BOARD_POLLING_TIME / CYCLE_TIME)
@@ -406,9 +405,14 @@ end
 local function isGripperActivated(state)
   local result = action_server_for_gripper_activation:createResult()
   local text = nil
-  if bit.band(state, GRIPPER_IS_ACTIVATED) == GRIPPER_IS_ACTIVATED then
+  if bit.band(state, GRIPPER_IS_ACTIVATED) == GRIPPER_IS_ACTIVATED and action_server_for_gripper_activation:getCurrentGoal().goal.activate == 1 then
     result.is_activated = true
     text = "Goal succeeded: Gripper has been activated."
+    return result, text
+  elseif
+    bit.band(state, GRIPPER_IS_ACTIVATED) == 0 and action_server_for_gripper_activation:getCurrentGoal().goal.activate == 0 then
+    result.is_activated = false
+    text = "Goal succeeded: Gripper has been deactivated."
     return result, text
   end
   return nil, nil
@@ -426,7 +430,6 @@ local function actionServerPosGoal()
     value = max_gripper_in_m
   end
   ros.DEBUG("ActionServerPos_Goal: new desired position is " .. value)
-  desired_goal_pos = value
   enqueue(command_to_send, convertPosFbFromMeterToByte(value))
 
   if action_server_for_gripper_pos:getCurrentGoal().goal.set_speed_and_force ~= 0 then
@@ -449,11 +452,14 @@ end
 local function actionServerActivationGoal()
   ros.INFO("ActionServerActivation_Goal")
   action_server_for_gripper_activation:acceptNewGoal()
+  local command_to_send = chooseCommand("reset", commands_for_gripper)
   if action_server_for_gripper_activation:getCurrentGoal().goal.activate == 1 then
-    local command_to_send = chooseCommand("reset", commands_for_gripper)
     enqueue(command_to_send, 1)
     enqueue(command_to_send, 0)
+  else
+    enqueue(command_to_send, 1)
   end
+
 end
 
 local function actionServerActivationCancel()
@@ -577,7 +583,7 @@ local function createActionFeedbackActivation(state)
     local feedback_for_action = action_server_for_gripper_activation:createFeeback()
     local result, text = isGripperActivated(state)
     if result ~= nil then
-      feedback_for_action.is_activated = true
+      feedback_for_action.is_activated = result.is_activated
     else
       feedback_for_action.is_activated = false
     end
@@ -1273,7 +1279,6 @@ local function runUsingProcessData()
       for i,v in ipairs(read_buffer) do
         print(v)
       end
-      --print(desired_goal_pos)
       print("-----------------------------")
     end
 
