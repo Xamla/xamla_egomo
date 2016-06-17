@@ -2,7 +2,7 @@
 
 ### What is Xamla Egomo?
 
-Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot](http://www.universal-robots.com/) UR5 equipped with [Robotiq](http://robotiq.com/) end-of-arm technologie. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) IDE (to be released in 2017). 
+Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot UR5](http://www.universal-robots.com/) equipped with [Robotiq](http://robotiq.com/) end-of-arm technology. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) Robot Programming IDE (to be released in 2017). 
 For more information and product pictures visit the [egomo website](http://xamla.com/egomo). Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) using the Egomo sensor head. More pictures can be found [here](egomo_3d_printed_parts/egomo-1/images).
 
 ![sensorhead1](egomo_3d_printed_parts/egomo-1/images/egomo_left.jpg "Egomo sensor head side view, showing that the webcam can be mounten on the side as well as in the front.")
@@ -18,6 +18,7 @@ For more information and product pictures visit the [egomo website](http://xamla
 * sensor-board with additional IO ports for laser, high-power IR/white LEDs or simple grippers or tactive sensors
 * two side- and front view Logitech C920 cameras in combinaton with a structure IO depth sensor
 * option to directy connect a Robotiq 2-Finger-Gripper-85 + Robotiq FT-300 sensor 
+* Easily usable from the Torch7 machine-learning framework (e.g. for deep learning based object detection or advanced RL-experiments)
 
 ### Xamla Egomo sensor head ROS Package ###
 
@@ -39,7 +40,7 @@ This packages contains the following:
 
 ### Calibration ###
 
-We do offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of features such as a professional calibration.
+We do offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of features such as a professional calibration (including full robot calibration).
 
 ### Get an Egomo device the easy way
 
