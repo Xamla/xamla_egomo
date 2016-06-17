@@ -1,0 +1,8 @@
+#goal definition
+bool activate
+---
+#result definition
+bool is_activated
+---
+#feedback
+bool is_activated

@@ -1,5 +1,9 @@
 local ros = require "ros"
 
+require 'ros.actionlib.SimpleActionServer'
+
+local actionlib = ros.actionlib
+
 local path = require "pl.path"
 
 local posix = require "posix"
@@ -8,7 +12,7 @@ local posix = require "posix"
 
 -- reset the gripper with falling edge 1.0 --> 0.0
 local GRIPPER_RESET = "gripper0.reset"
--- sets the position of the gripper in mm (range?)
+-- sets the position of the gripper in m
 local GRIPPER_POS_CMD = "gripper0.pos_cmd"
 -- sets the gripper's maximum force in N (range?)
 local GRIPPER_MAX_FORCE = "gripper0.max_force"
@@ -24,6 +28,18 @@ local GRIPPER_GRIP_FORCE = "gripper0.grip_force"
 local GRIPPER_LEFT_FINGER_FORCE = "gripper0.left_finger_force"
 -- sets the gripper's right finger force in N
 local GRIPPER_RIGHT_FINGER_FORCE = "gripper0.right_finger_force"
+
+-- Constants for Gripper State--
+
+local GRIPPER_GOTO_REQUEST = 8
+local GRIPPER_IS_ACTIVATED = 48
+local GRIPPER_HAS_OBJECT_OPEN = 64
+local GRIPPER_HAS_OBJECT_CLOSE = 128
+local GRIPPER_HAS_NO_OBJECT = 172
+
+local GRIPPER_OBJECT_DURING_OPEN = bit.bor(GRIPPER_GOTO_REQUEST, GRIPPER_IS_ACTIVATED, GRIPPER_HAS_OBJECT_OPEN)
+local GRIPPER_OBJECT_DURING_CLOSE = bit.bor(GRIPPER_GOTO_REQUEST, GRIPPER_IS_ACTIVATED, GRIPPER_HAS_OBJECT_CLOSE)
+local GRIPPER_HAS_MOVED_BUT_NO_OBJECT = bit.bor(GRIPPER_GOTO_REQUEST, GRIPPER_IS_ACTIVATED, GRIPPER_HAS_OBJECT_CLOSE, GRIPPER_HAS_OBJECT_OPEN)
 
 -- Force Torque commands--
 
@@ -63,9 +79,24 @@ local IMU_DB = "imu0.db"
 -- returns the angular velocity around the z-axis (yaw) (in rad/s)
 local IMU_DC = "imu0.dc"
 
+-- Light emmiters commands --
+local LIGHT1 = "io0.out0"
+local LIGHT2 = "io0.out1"
+local LIGHT3 = "io0.out2"
+
+-- If you use an alias make sure that all components are connect to the correct board outputs
+local alias_for_light_pins = {
+  ["led"] = LIGHT1,
+  ["ir-led"] = LIGHT2,
+  ["laser"] = LIGHT3
+}
+
 -- ros common
 local spinner
 local nodehandle
+
+local CYCLE_TIME = 0.005
+local BOARD_POLLING_TIME = 0.020
 
 -- forward declaration
 local enqueue
@@ -77,6 +108,17 @@ local publisher_gripper
 local service
 local commands_for_gripper = {}
 local send_set_command_spec
+local action_server_for_gripper_pos
+local action_server_for_gripper_activation
+
+-- Actions --
+local last_pos_fb = -1
+local last_state = -1
+local board_confirmed_pos_cmd = false
+local board_confirmed_activation_cmd = false
+local FILTER_SIZE_FOR_GRIPPER_STATE = math.ceil(BOARD_POLLING_TIME / CYCLE_TIME)
+local filter_counter_pos_cmd = 0
+local filter_counter_activation = 0
 
 local min_gripper_in_m = 0.0
 local max_gripper_in_m = 0.087
@@ -95,6 +137,9 @@ local imu_spec
 local publisher_imu
 local commands_for_imu = {}
 
+-- Light --
+local commands_for_light = {}
+
 -- Joint State Gripper --
 local joint_state_spec
 local publisher_joint_state
@@ -109,7 +154,6 @@ local file_descriptor = nil
 
 -- Debug
 local debug = false
-local joint_state = 0
 
 local is_reconnected = false -- Is used in init() function and in run()
 
@@ -139,18 +183,19 @@ local process_data_position = {
   [GRIPPER_GRIP_FORCE] = 1,
   [GRIPPER_LEFT_FINGER_FORCE] = 2,
   [GRIPPER_RIGHT_FINGER_FORCE] = 3,
-  [FT_X] = 4,
-  [FT_Y] = 5,
-  [FT_Z] = 6,
-  [FT_A] = 7,
-  [FT_B] = 8,
-  [FT_C] = 9,
-  [IMU_A] = 10,
-  [IMU_B] = 11,
-  [IMU_C] = 12,
-  [IMU_DA] = 13,
-  [IMU_DB] = 14,
-  [IMU_DC] = 15
+  [GRIPPER_STATE] = 4,
+  [FT_X] = 5,
+  [FT_Y] = 6,
+  [FT_Z] = 7,
+  [FT_A] = 8,
+  [FT_B] = 9,
+  [FT_C] = 10,
+  [IMU_A] = 11,
+  [IMU_B] = 12,
+  [IMU_C] = 13,
+  [IMU_DA] = 14,
+  [IMU_DB] = 15,
+  [IMU_DC] = 16
 }
 
 -- Hint: order is changed based on indicies. The order of the returned process data is defined by the numbers 0-15
@@ -159,6 +204,7 @@ local config_for_process_data = {
   [GRIPPER_GRIP_FORCE] = config_prefix .. process_data_position[GRIPPER_GRIP_FORCE] .. " = " .. GRIPPER_GRIP_FORCE .. "\n",
   [GRIPPER_LEFT_FINGER_FORCE] = config_prefix .. process_data_position[GRIPPER_LEFT_FINGER_FORCE] .. " = " .. GRIPPER_LEFT_FINGER_FORCE .. "\n",
   [GRIPPER_RIGHT_FINGER_FORCE] = config_prefix .. process_data_position[GRIPPER_RIGHT_FINGER_FORCE] .. " = " .. GRIPPER_RIGHT_FINGER_FORCE .. "\n",
+  [GRIPPER_STATE] = config_prefix .. process_data_position[GRIPPER_STATE] .. " = " .. GRIPPER_STATE .. "\n",
   [FT_X] = config_prefix .. process_data_position[FT_X] .. " = " .. FT_X .. "\n",
   [FT_Y] = config_prefix .. process_data_position[FT_Y] .. " = " .. FT_Y .. "\n",
   [FT_Z] = config_prefix .. process_data_position[FT_Z] .. " = " .. FT_Z .. "\n",
@@ -216,12 +262,20 @@ local function add_commands_for_imu()
   }
 end
 
+local function add_commands_for_light()
+  commands_for_light = {
+    LIGHT1,
+    LIGHT2,
+    LIGHT3
+  }
+end
+
 local function convertPosFbFromByteToMeter(value)
-  return 0.087 / (3.0 - 230.0) * (value - 230.0) -- TODO: Has to be validated
+  return 0.087 / (3.0 - 230.0) * (value - 230.0)
 end
 
 local function convertPosFbFromMeterToByte(value)
-  return math.floor((3.0-230.0)/0.087 * value + 230.0) -- TODO: Has to be validated
+  return math.floor((3.0-230.0)/0.087 * value + 230.0)
 end
 
 -- This function searches for devices in order to get possible paths for read/write
@@ -278,7 +332,6 @@ end
 local function getEgomoDevices()
   local vendor_id = "0483"
   local product_id = "5740"
-
   return findDevice(vendor_id, product_id)
 end
 
@@ -289,22 +342,25 @@ end
 -- Ouput:
 --  v - The corresponding command (e.g. "gripper0.reset")
 local function chooseCommand(command, command_list)
-  for i,v in ipairs(command_list) do
-    if string.find(v,command) then
-      return v
+  if command ~= nil then
+    for i,v in ipairs(command_list) do
+      if string.find(v,command) then
+        return v
+      end
     end
   end
   return nil
 end
 
--- Handler for service SendSetCommand
-local function sendSetCommandHandler(request, response, header)
-  if request.command_name == "joint_state" then
-    joint_state = math.rad(request.value)
-    return true
-  end
-
+-- Handler for service SendCommand
+local function sendCommandHandler(request, response, header)
   local command_to_send = chooseCommand(request.command_name, commands_for_gripper)
+  if command_to_send == nil then
+    command_to_send = chooseCommand(request.command_name, commands_for_light)
+    if command_to_send == nil then
+      command_to_send = chooseCommand(alias_for_light_pins[request.command_name], commands_for_light)
+    end
+  end
 
   if command_to_send ~= nil then
     if request.command_name == "pos_cmd" then
@@ -329,9 +385,106 @@ local function sendSetCommandHandler(request, response, header)
   return true
 end
 
+local function isObjectGripped(state)
+  if bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_OPEN) == GRIPPER_OBJECT_DURING_OPEN then
+    return true
+  elseif bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_CLOSE) == GRIPPER_OBJECT_DURING_CLOSE then
+    return true
+  else
+    return false
+  end
+end
+
+local function isGoalPosReached(state)
+  local result = action_server_for_gripper_pos:createResult()
+  result.pos_fb = last_pos_fb
+  result.object_gripped = isObjectGripped(state)
+  local text = nil
+  if bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_OPEN) == GRIPPER_OBJECT_DURING_OPEN then
+    text = "Goal succeeded: Gripper has gripped object during opening."
+    return result, text
+  elseif bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) ~= GRIPPER_HAS_MOVED_BUT_NO_OBJECT and bit.band(state, GRIPPER_OBJECT_DURING_CLOSE) == GRIPPER_OBJECT_DURING_CLOSE then --
+    text = "Goal succeeded: Gripper has gripped object during closing."
+    return result, text
+  elseif bit.band(state, GRIPPER_HAS_MOVED_BUT_NO_OBJECT) == GRIPPER_HAS_MOVED_BUT_NO_OBJECT then
+    text = "Goal succeeded: Gripper has reached requested position."
+    return result, text
+  else
+    return nil, nil
+  end
+end
+
+local function isGripperActivated(state)
+  local result = action_server_for_gripper_activation:createResult()
+  local text = nil
+  if bit.band(state, GRIPPER_IS_ACTIVATED) == GRIPPER_IS_ACTIVATED and action_server_for_gripper_activation:getCurrentGoal().goal.activate == 1 then
+    result.is_activated = true
+    text = "Goal succeeded: Gripper has been activated."
+    return result, text
+  elseif
+    bit.band(state, GRIPPER_IS_ACTIVATED) == 0 and action_server_for_gripper_activation:getCurrentGoal().goal.activate == 0 then
+    result.is_activated = false
+    text = "Goal succeeded: Gripper has been deactivated."
+    return result, text
+  end
+  return nil, nil
+end
+
+local function actionServerPosGoal()
+  ros.INFO("ActionServerPos_Goal")
+  action_server_for_gripper_pos:acceptNewGoal()
+  local command_to_send = chooseCommand("pos_cmd", commands_for_gripper)
+  local value = action_server_for_gripper_pos:getCurrentGoal().goal.goal_pos
+
+  if value < min_gripper_in_m then
+    value = min_gripper_in_m
+  elseif value > max_gripper_in_m then
+    value = max_gripper_in_m
+  end
+  ros.DEBUG("ActionServerPos_Goal: new desired position is " .. value)
+  enqueue(command_to_send, convertPosFbFromMeterToByte(value))
+
+  if action_server_for_gripper_pos:getCurrentGoal().goal.set_speed_and_force ~= 0 then
+    enqueue(chooseCommand(GRIPPER_MAX_SPEED, commands_for_gripper), action_server_for_gripper_pos:getCurrentGoal().goal.speed)
+    enqueue(chooseCommand(GRIPPER_MAX_FORCE, commands_for_gripper), action_server_for_gripper_pos:getCurrentGoal().goal.force)
+  end
+end
+
+local function actionServerPosCancel()
+  ros.INFO("ActionServerPos_Cancel")
+  local result = action_server_for_gripper_pos:createResult()
+  result.pos_fb = last_pos_fb
+  result.object_gripped = isObjectGripped(last_state)
+  ros.DEBUG("ActionServerPos_Cancel: action was cancelled and position is " .. last_pos_fb)
+  action_server_for_gripper_pos:setPreempted(result, 'cancel')
+  board_confirmed_pos_cmd = false
+  filter_counter_pos_cmd = 0
+end
+
+local function actionServerActivationGoal()
+  ros.INFO("ActionServerActivation_Goal")
+  action_server_for_gripper_activation:acceptNewGoal()
+  local command_to_send = chooseCommand("reset", commands_for_gripper)
+  if action_server_for_gripper_activation:getCurrentGoal().goal.activate == 1 then
+    enqueue(command_to_send, 1)
+    enqueue(command_to_send, 0)
+  else
+    enqueue(command_to_send, 1)
+  end
+end
+
+local function actionServerActivationCancel()
+  ros.INFO("ActionServerActivation_Cancel")
+  local result = action_server_for_gripper_activation:createResult()
+  result.is_activated = false
+  ros.DEBUG("ActionServerActivation_Cancel: action was cancelled and activation is " .. tostring(result.is_activated))
+  action_server_for_gripper_activation:setPreempted(result, 'cancel')
+  board_confirmed_activation_cmd = false
+  filter_counter_activation = 0
+end
+
 -- Function in order to do initialization used components (e.g. Services)
 local function init()
-
   if not is_reconnected then
     ros.init('xamla_egomo')
   else
@@ -341,10 +494,18 @@ local function init()
     publisher_joint_state:shutdown()
     publisher_command_return:shutdown()
     service:shutdown()
+    action_server_for_gripper_pos:shutdown()
+    action_server_for_gripper_activation:shutdown()
     nodehandle:shutdown()
     spinner:stop()
     ros.init('xamla_egomo')
     print("Node reconnected to master...")
+  end
+
+  if CYCLE_TIME < BOARD_POLLING_TIME then
+    FILTER_SIZE_FOR_GRIPPER_STATE = math.ceil(BOARD_POLLING_TIME / CYCLE_TIME)
+  else
+    FILTER_SIZE_FOR_GRIPPER_STATE = 1
   end
 
   spinner = ros.AsyncSpinner()
@@ -355,24 +516,37 @@ local function init()
   -- Gripper --
   add_commands_for_gripper()
   gripper_spec = ros.MsgSpec('egomo_msgs/XamlaGripper')
-  publisher_gripper = nodehandle:advertise("XamlaGripper", gripper_spec)
+  publisher_gripper = nodehandle:advertise("XamlaEgomo/XamlaGripper", gripper_spec)
+
+  action_server_for_gripper_pos = actionlib.SimpleActionServer(nodehandle, 'XamlaEgomo/gripper_pos_action', 'egomo_msgs/EgomoGripperPos')
+  action_server_for_gripper_pos:registerGoalCallback(actionServerPosGoal)
+  action_server_for_gripper_pos:registerPreemptCallback(actionServerPosCancel)
+  action_server_for_gripper_pos:start()
+
+  action_server_for_gripper_activation = actionlib.SimpleActionServer(nodehandle, 'XamlaEgomo/gripper_activation_action', 'egomo_msgs/EgomoGripperActivate')
+  action_server_for_gripper_activation:registerGoalCallback(actionServerActivationGoal)
+  action_server_for_gripper_activation:registerPreemptCallback(actionServerActivationCancel)
+  action_server_for_gripper_activation:start()
 
   -- Experimental
   command_return_spec = ros.MsgSpec('std_msgs/Header')
-  publisher_command_return = nodehandle:advertise("XamlaGripperCommandReturn", command_return_spec)
+  publisher_command_return = nodehandle:advertise("XamlaEgomo/XamlaGripperCommandReturn", command_return_spec)
 
-  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendGripperSetCommand')
-  service = nodehandle:advertiseService('egomo_msgs/SendGripperSetCommand', send_set_command_spec, sendSetCommandHandler)
+  send_set_command_spec = ros.SrvSpec('egomo_msgs/SendCommand')
+  service = nodehandle:advertiseService('XamlaEgomo/SendCommand', send_set_command_spec, sendCommandHandler)
 
   -- Force Torque --
   add_commands_for_force_torque()
   force_torque_spec = ros.MsgSpec('geometry_msgs/WrenchStamped')
-  publisher_force_torque = nodehandle:advertise("XamlaForceTorque", force_torque_spec)
+  publisher_force_torque = nodehandle:advertise("XamlaEgomo/XamlaForceTorque", force_torque_spec)
 
   -- IMU --
   add_commands_for_imu()
   imu_spec = ros.MsgSpec('geometry_msgs/AccelStamped')
-  publisher_imu = nodehandle:advertise("XamlaIOIMU", imu_spec)
+  publisher_imu = nodehandle:advertise("XamlaEgomo/XamlaIOIMU", imu_spec)
+
+  -- Laser --
+  add_commands_for_light()
 
   -- Joint State Gripper --
   joint_state_spec = ros.MsgSpec('sensor_msgs/JointState')
@@ -380,7 +554,6 @@ local function init()
 end
 
 local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
-  --local previous_position
   local value_in_rad = 0.8 - ((0.8/0.085) * convertPosFbFromByteToMeter(pos_fb))
 
   if value_in_rad < 0 then
@@ -388,10 +561,54 @@ local function assignValuesToJointStateMessage(joint_state_message, pos_fb)
   elseif value_in_rad > 0.8 then
     value_in_rad = 0.8
   end
-
   joint_state_message.position:set(torch.DoubleTensor({value_in_rad}))
-  -- TODO: Bisher nur Debug
-  --joint_state_message.position:set(torch.DoubleTensor({joint_state}))
+end
+
+local function createActionFeedbackGripperPos(pos_fb, state)
+  local feedback_for_action = action_server_for_gripper_pos:createFeeback()
+  feedback_for_action.pos_fb = pos_fb
+  feedback_for_action.object_gripped = isObjectGripped(state)
+  action_server_for_gripper_pos:publishFeedback(feedback_for_action)
+  last_pos_fb = pos_fb
+end
+
+local function checkGripperPosGoalSucceeded(state)
+  if filter_counter_pos_cmd >= FILTER_SIZE_FOR_GRIPPER_STATE then
+    local result, text = isGoalPosReached(state)
+    if result ~= nil then
+      action_server_for_gripper_pos:setSucceeded(result, text)
+      board_confirmed_pos_cmd = false
+      filter_counter_pos_cmd = 0
+    end
+  else
+    filter_counter_pos_cmd = filter_counter_pos_cmd + 1
+  end
+end
+
+local function createActionFeedbackActivation(state)
+  if filter_counter_activation >= FILTER_SIZE_FOR_GRIPPER_STATE then
+    local feedback_for_action = action_server_for_gripper_activation:createFeeback()
+    local result, text = isGripperActivated(state)
+    if result ~= nil then
+      feedback_for_action.is_activated = result.is_activated
+    else
+      feedback_for_action.is_activated = false
+    end
+    action_server_for_gripper_activation:publishFeedback(feedback_for_action)
+  end
+end
+
+local function checkGripperActivationGoalSucceeded(state)
+  if filter_counter_activation >= FILTER_SIZE_FOR_GRIPPER_STATE then
+    local result, text = isGripperActivated(state)
+    if result ~= nil then
+      action_server_for_gripper_activation:setSucceeded(result, text)
+      board_confirmed_activation_cmd = false
+      filter_counter_activation = 0
+    end
+  else
+    filter_counter_activation = filter_counter_activation + 1
+  end
 end
 
 -- This function assigns the a value to a field of a message (if possible)
@@ -418,7 +635,11 @@ local function assignValuesToMessage(message, field_name, value, type)
         elseif current_position > max_gripper_in_m then
           current_position = max_gripper_in_m
         end
-        message.pos_fb = math.abs(current_position)
+        message.pos_fb = current_position
+        -- feedback for action pos
+        if action_server_for_gripper_pos:isActive() then
+          createActionFeedbackGripperPos(current_position, last_state)
+        end
         return true
       end
     elseif field_name == GRIPPER_LEFT_FINGER_FORCE then
@@ -426,6 +647,20 @@ local function assignValuesToMessage(message, field_name, value, type)
       return true
     elseif field_name == GRIPPER_RIGHT_FINGER_FORCE then
       message.right_finger_force = value
+      return true
+    elseif field_name == GRIPPER_STATE then
+      message.state = value
+      message.object_gripped = isObjectGripped(value)
+      last_state = value
+      -- Check if gripper goal has been reached
+      if action_server_for_gripper_pos:isActive() and board_confirmed_pos_cmd then
+        checkGripperPosGoalSucceeded(value)
+      end
+      -- Create feedback for gripper activation and check if goal is reached
+      if action_server_for_gripper_activation:isActive() and board_confirmed_activation_cmd then
+        createActionFeedbackActivation(value)
+        checkGripperActivationGoalSucceeded(value)
+      end
       return true
     else
       return false
@@ -523,93 +758,17 @@ end
 --  values - The corresponding value as a number (e.g. 1.004)
 local function parseProcessData(line)
   local values = {}
-
   for value in string.gmatch(string.sub(line,2,-2),'[^,]+') do
     values[#values+1] = tonumber(value)
   end
-
   return values
 end
 
--- This function is responsible for creating and publishing the messages based on the read data (single line protocol).
--- Notice: only one message is sent even when enough data is received for more messages. Due to blacklist concept values which
--- have been set already won't be replace by newer values. This might lead to that some values will be discarded. Use process data
--- concept to prevent discarding values.
--- Input:
---  type - Defines the type of the message (e.g. GRIPPER, FORCE_TORQUE, IMU)
-local function buildXamlaMessage(type)
-  local message
-  local MESSAGE_PARAMETERS
-  local used_command_list
-  local used_publisher
-  local number_of_set_parameters = 0
-  local blacklist = {}
-
-  -- Initialize components based on type
-  if type == GRIPPER then
-    message = ros.Message('egomo_msgs/XamlaGripper')
-    MESSAGE_PARAMETERS = 4
-    used_command_list = commands_for_gripper
-    used_publisher = publisher_gripper
-  elseif type == FORCE_TORQUE then
-    message = ros.Message('geometry_msgs/WrenchStamped')
-    MESSAGE_PARAMETERS = 6
-    used_command_list = commands_for_force_torque
-    used_publisher = publisher_force_torque
-  elseif type == IMU then
-    message = ros.Message('geometry_msgs/AccelStamped')
-    MESSAGE_PARAMETERS = 6
-    used_command_list = commands_for_imu
-    used_publisher = publisher_imu
-  end
-
-  message.header.frame_id = "ee_link"
-
-  while true do
-    for i,line in ipairs(read_buffer) do
-      -- Skip line if it is answer of an previous set command
-      if string.byte(line,1) ~= char_byte_table["O"] and string.byte(line,2) ~= char_byte_table["K"] then
-        -- Inspect the line and look for corresponding field and value
-        local field_name, value = parseData(line, used_command_list, blacklist)
-        if field_name ~= nil and value ~= nil then
-          -- Try to assign the value to the given field
-          if assignValuesToMessage(message, field_name, value, type) then
-            table.insert(blacklist, field_name)
-            number_of_set_parameters = number_of_set_parameters + 1;
-          end
-        end
-      else
-        local return_message = ros.Message('std_msgs/Header')
-        return_message.seq = call_sequence
-        call_sequence = call_sequence + 1
-        return_message.stamp = ros.Time.now()
-        return_message.frame_id = line
-        publisher_command_return:publish(return_message)
-      end
-    end
-
-    -- If message is complete publish message
-    if number_of_set_parameters == MESSAGE_PARAMETERS then
-      message.header.stamp = ros.Time.now()
-      used_publisher:publish(message)
-      blacklist = {}
-      number_of_set_parameters = 0
-      ros.DEBUG("XAMLA_" .. types_string[type] .. ": Message send yield now")
-      coroutine.yield()
-    else
-      ros.DEBUG("XAMLA_" .. types_string[type] .. ": Message unfinished yield now")
-      coroutine.yield()
-    end
-  end
-end
-
 -- This function checks whether the input is a valid command and returns the type
-
 -- Input:
 --  command - Command which is used for comparision
 -- Output:
 --  type - The type to which the command belongs to (Gripper, FT, IMU)
-
 local function getType(command)
   for i,v in ipairs(commands_for_gripper) do
     if command == v then
@@ -623,7 +782,7 @@ local function getType(command)
   end
   for i,v in ipairs(commands_for_imu) do
     if command == v then
-      return FORCE_TORQUE
+      return IMU
     end
   end
   return nil
@@ -671,6 +830,13 @@ local function buildXamlaMessageBasedOnProcessData()
             end
           end
         end
+      elseif string.byte(line,1) == char_byte_table["O"] and string.byte(line,2) == char_byte_table["K"] then
+        local command, value = parseData(line, commands_for_gripper, {})
+        if command == GRIPPER_POS_CMD and action_server_for_gripper_pos:isActive() then
+          board_confirmed_pos_cmd = true -- identify in order to define when action goal (pos_cmd) is reached
+        elseif command == GRIPPER_RESET and action_server_for_gripper_activation:isActive() then
+          board_confirmed_activation_cmd = true -- identify in order to define when action goal (activation) is reached
+        end
       else
         local return_message = ros.Message('std_msgs/Header')
         return_message.seq = call_sequence
@@ -717,7 +883,6 @@ end
 -- Input:
 --  device - path or device (e.g. "/dev/ttyACM0")
 local function initFileDescriptor(device, error_on_read_write)
-
   -- Scans for devices of type egomo IO board
   local devices = getEgomoDevices()
 
@@ -921,9 +1086,7 @@ local function read()
         unfinished_line_buffer = read_buffer[#read_buffer]
         table.remove(read_buffer,#read_buffer)
       end
-
       ros.DEBUG("READER: job done yield now")
-      -- coroutine.yield() neccesarry when device is sending data continously
     else
       ros.DEBUG("READER: job unfinished yield now")
       coroutine.yield()
@@ -931,10 +1094,11 @@ local function read()
   end
 end
 
--- Checks if any subsriber exists
+-- Checks if any subscriber exists or an action is active
 local function isAnySubscribed()
   if publisher_gripper:getNumSubscribers() > 0 or publisher_force_torque:getNumSubscribers() > 0 or publisher_imu:getNumSubscribers() > 0
-    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0 then
+    or publisher_joint_state:getNumSubscribers() > 0 or publisher_command_return:getNumSubscribers() > 0
+    or action_server_for_gripper_pos:isActive() or action_server_for_gripper_activation:isActive() then
     return true
   end
   return false
@@ -960,52 +1124,22 @@ local function messageCreationWithProcessData()
   end
 end
 
--- This function initiates the creation of the different messages
-local function messageCreation()
-  local xamla_gripper_worker = coroutine.create(buildXamlaMessage)
-  local xamla_ft_worker = coroutine.create(buildXamlaMessage)
-  local xamla_imu_worker = coroutine.create(buildXamlaMessage)
-
-  while true do
-    if publisher_gripper:getNumSubscribers() > 0 then
-      coroutine.resume(xamla_gripper_worker, GRIPPER)
-    end
-    if publisher_force_torque:getNumSubscribers() > 0 then
-      coroutine.resume(xamla_ft_worker, FORCE_TORQUE)
-    end
-    if publisher_imu:getNumSubscribers() > 0 then
-      coroutine.resume(xamla_imu_worker, IMU)
-    end
-
-    ros.DEBUG("MESSAGE CREATION: resumed all worker yield now")
-    coroutine.yield()
-
-    -- Create new coroutine in case coroutine died
-    if coroutine.status(xamla_gripper_worker) == "dead" then
-      ros.WARN("GRIPPER WORKER died and will be reinitialized")
-      xamla_gripper_worker = coroutine.create(buildXamlaMessage)
-    end
-
-    if coroutine.status(xamla_ft_worker) == "dead"  then
-      ros.WARN("FORCE TORQUE WORKER died and will be reinitialized")
-      xamla_ft_worker = coroutine.create(buildXamlaMessage)
-    end
-
-    if coroutine.status(xamla_imu_worker) == "dead"  then
-      ros.WARN("IMU WORKER died and will be reinitialized")
-      xamla_imu_worker = coroutine.create(buildXamlaMessage)
-    end
-  end
-end
-
 -- Main loop using process data protocoll
-local function runUsingProcessData()
+local function run()
   local write_worker = coroutine.create(write)
   local reader_worker = coroutine.create(read)
   local message_worker = coroutine.create(messageCreationWithProcessData)
   initFileDescriptor(device, false)
 
+  local iteration_counter = 0
+  local ACTIVATE_GC_AFTER_ITERATION = 1000
+
   while true do
+    if iteration_counter == ACTIVATE_GC_AFTER_ITERATION then
+      iteration_counter = 0
+      collectgarbage("collect")
+    end
+
     if not ros.ok() then
       return
     end
@@ -1056,102 +1190,12 @@ local function runUsingProcessData()
     end
     -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
     -- May increase this value when more messages are added
-    sys.sleep(0.005)
+    sys.sleep(CYCLE_TIME)
     ros.spinOnce()
-  end
-end
-
--- Main loop using the single line protocol
-local function run()
-  local write_worker = coroutine.create(write)
-  local reader_worker = coroutine.create(read)
-  local message_worker = coroutine.create(messageCreation)
-  initFileDescriptor(device, false)
-
-  while true do
-    if not ros.ok() then
-      return
-    end
-
-    if not ros.master.check() then
-      print("Master down trying to reconnect...")
-      while not ros.master.check() do
-        sys.sleep(0.5)
-      end
-      is_reconnected = true
-      init()
-    end
-
-    if publisher_gripper:getNumSubscribers() == 0 then
-      ros.DEBUG('gripper waiting for subscriber')
-    else
-      enqueue(GRIPPER_POS_FB)
-      enqueue(GRIPPER_GRIP_FORCE)
-      enqueue(GRIPPER_LEFT_FINGER_FORCE)
-      enqueue(GRIPPER_RIGHT_FINGER_FORCE)
-    end
-
-    if publisher_force_torque:getNumSubscribers() == 0 then -- TODO: Wenn keine Nachricht gesendet wird, dann wird nicht unsubscribed?
-      ros.DEBUG('force torque waiting for subscriber')
-    else
-      enqueue(FT_X)
-      enqueue(FT_Y)
-      enqueue(FT_Z)
-      enqueue(FT_A)
-      enqueue(FT_B)
-      enqueue(FT_C)
-    end
-
-    if publisher_imu:getNumSubscribers() == 0 then
-      ros.DEBUG('imu waiting for subscriber')
-    else
-      enqueue(IMU_A)
-      enqueue(IMU_B)
-      enqueue(IMU_C)
-      enqueue(IMU_DA)
-      enqueue(IMU_DB)
-      enqueue(IMU_DC)
-    end
-
-    coroutine.resume(write_worker)
-    coroutine.resume(reader_worker)
-
-    if is_reconnected then
-      message_worker = coroutine.create(messageCreation)
-      is_reconnected = false
-    end
-    coroutine.resume(message_worker)
-
-    if debug then
-      for i,v in ipairs(read_buffer) do
-        print(v)
-      end
-      print("----------------------------")
-    end
-
-    -- Clear the read buffer
-    read_buffer = {}
-
-    if coroutine.status(write_worker) == "dead" then
-      ros.WARN("WRITER WORKER died and will be reinitialized")
-      write_worker = coroutine.create(write)
-    end
-    if coroutine.status(reader_worker) == "dead" then
-      ros.WARN("READER WORKER died and will be reinitialized")
-      reader_worker = coroutine.create(read)
-    end
-    if coroutine.status(message_worker) == "dead" then
-      ros.WARN("MESSAGE WORKER died and will be reinitialized")
-      message_worker = coroutine.create(messageCreation)
-    end
-    -- 0.005 is a good value; smaller values lead to that writing data can fail because device is temporarily unavailable
-    -- May increase this value when more messages are added
-    sys.sleep(0.005)
-    ros.spinOnce()
+    iteration_counter = iteration_counter + 1
   end
 end
 
 init()
-runUsingProcessData()
--- run() -- use this function for the old protocol
+run()
 ros.shutdown()
