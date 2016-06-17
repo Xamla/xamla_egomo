@@ -15,7 +15,7 @@ For more information and product pictures visit the [egomo website](http://xamla
 * two side- and front view Logitech C920 cameras in combinaton with a structure IO depth sensor
 * option to directy connect a Robotiq 2-Finger-Gripper-85 + Robotiq FT-300 sensor 
 
-### [Xamla Egomo](http://xamla.com/en/egomo/index.html) Sensorhead ROS Package. ###
+### Xamla Egomo Sensorhead ROS Package. ###
 
 The Egomo sensorhead is a wireless based head for adaptive robotics. It is equipped with a [Logitech C920 HD](http://www.logitech.com/en-us/product/hd-pro-webcam-c920) Camera, a [Structure IO](http://structure.io/) Depth-Camera and an IR-Line-Laser. In combination with an [UR5](http://www.universal-robots.com/products/ur5-robot/) Robot equipped wih a [Robotiq 2-finger-85](http://robotiq.com/products/adaptive-robot-gripper/universal-robots-bundle/) gripper and an optionally [Robotiq FT-300](http://robotiq.com/force-torque-sensor-kit-universal-robots/) force-torque sensor you are able to solve robotic tasks with free path planning and no cables. 
 
