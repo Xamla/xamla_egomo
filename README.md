@@ -3,7 +3,7 @@
 ### What is Xamla Egomo?
 
 Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot UR5](http://www.universal-robots.com/) equipped with [Robotiq](http://robotiq.com/) end-of-arm technology. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) Robot Programming IDE (to be released in 2017). 
-For more information and product pictures visit the [egomo website](http://xamla.com/egomo). Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) using the Egomo sensor head. More pictures can be found [here](egomo_3d_printed_parts/egomo-1/images).
+For more information and product pictures visit the [egomo website](http://xamla.com/egomo). Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) using the Egomo sensor head.
 
 ![sensorhead1](egomo_3d_printed_parts/egomo-1/images/egomo_left.jpg "Egomo sensor head side view, showing that the webcam can be mounten on the side as well as in the front.")
 
@@ -44,7 +44,7 @@ We do offer an implemented calibration routine on [request](http://xamla.com/en/
 
 ### Get an Egomo device the easy way
 
-You like the idea of open-source hardware but the process of buying parts, 3D printing, soldering etc. is too cumbersome for you and you would like to get a tested/working sensor head quickly? No problem for EUR 1499 + shipping we send you a pre-assembled version of the Egomo sensor head with all parts included. If you are interested in this option please contact us via [E-mail](mailto:egomo@xamla.com). 
+You like the idea of open-source hardware but the process of buying parts, 3D printing, soldering etc. is too cumbersome for you and you would like to get a tested/working sensor head quickly? No problem for EUR 1499 + shipping we send you a pre-assembled version of the Egomo sensor head with all parts (3 sensors, RPi, IO-Board, cables, microSD card with our customized RPi operating system image) included. If you are interested in this option please contact us via [E-mail](mailto:egomo@xamla.com).
 
 ### Support ###
 
