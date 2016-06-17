@@ -1,15 +1,14 @@
 <package>
   <name>xamla_egomo</name>
   <version>1.0.0</version>
-  <description>ENTE</description>
-  <maintainer email="xamla_egomo@xamla.de">Der Jens</maintainer>
+  <description>Xamla Egomo</description>
+  <maintainer email="xamla_egomo@xamla.de">Xamla</maintainer>
   <license>BSD</license>
   <url type="website">http://www.xamla.de</url>
-
   <buildtool_depend>catkin</buildtool_depend>
   <run_depend>egomo_msgs</run_depend>
   <run_depend>egomo_ur5</run_depend>
-
+  <run_depend>egomo_node</run_depend>
   <export>
     <metapackage/>
   </export>

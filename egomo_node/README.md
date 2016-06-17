@@ -82,22 +82,49 @@ This action can be used to activate/deactivate the gripper ([EgomoGripperActivat
 
 #### Goal ####
 
-type | name | description
+name | type | description
 ---------|-----------|---------------
-bool   | activate | true to activate gripper - false to deactivate gripper
+activate   | bool | true to activate gripper - false to deactivate gripper
 
 #### Feedback ####
 
-type | name | description
+name | type | description
 ---------|-----------|---------------
-bool   | is_activated | true if gripper is activated - false if gripper is deactivated
+is_activated   | bool | true if gripper is activated - false if gripper is deactivated
+
+#### Result ####
+
+name | type | description
+---------|-----------|---------------
+is_activated   | bool | true if gripper is activated - false if gripper is deactivated
+
+### Action EgomoGripperPos ###
+
+This action can be used to send the gripper position commands ([EgomoGripperPos.action](https://github.com/Xamla/xamla_egomo/blob/master/egomo_msgs/action/EgomoGripperPos.action)). Furthermore the speed and the force can be set directly if needed. The feedback and the result contain the current position of the gripper and whether an object has been gripped.
+
+#### Goal ####
+
+name | type | description
+---------|-----------|---------------
+goal_pos   | float32 | The desired position in m (e.g. 0.0 for close or 0.087 for open)
+set_speed_and_force | bool | If true the given speed and the force are set directly with the position command.
+speed | uint8 | Speed of the gripper (0 is lowest, 255 is highest speed)
+force | uint8 | Force of the gripper (0 is lowest, 255 is highest force)
+
+#### Feedback ####
+
+name | type | description
+---------|-----------|---------------
+pos_fb   | float32 | The current position of the gripper
+object_gripped   | bool | True if an object has been gripped and false otherwise
 
 #### Result ####
 
 type | name | description
 ---------|-----------|---------------
-bool   | is_activated | true if gripper is activated - false if gripper is deactivated
-    
+pos_fb   | float32 | The current position of the gripper
+object_gripped   | bool | True if an object has been gripped and false otherwise
+
 ## Troubleshooting FAQ
 
  - Q1: I get the error "No device could be found!!!".
