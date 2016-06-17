@@ -1,6 +1,6 @@
 # Setup the Raspberry Pi for Xamla Egomo
 
-This how-to assumes you use a linux pc and was tested with Ubuntu 14.04 and 16.04 but should work for other linux distributions, too.
+This how-to assumes you use a Linux PC and was tested with Ubuntu 14.04 and 16.04 but should work for other Linux distributions, too.
 It describes how to setup the SD card for the Raspberry Pi and provides a short overview how to operate the system.
 
 

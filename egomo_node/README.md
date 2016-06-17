@@ -1,22 +1,24 @@
-# Description xamla_egomo_node#
+# xamla_egomo_node #
 
 ## General Information ##
 
-This node is supposed to be executed on the Raspberry Pi and offers a ros-service, actions for sending commands to the gripper. Furthermore different topics are offered in order to get information about the gripper, force torque (FT) and inertial measurement unit (IMU). Here an overview is given about:
+This node runs on the Raspberry Pi on the Egomo sensor and offers a ROS-service which offers ROS-actions to asynchronously control a connected gripper. Furthermore different topics are offered in order to get information about the gripper, force torque (FT) and inertial measurement unit (IMU).
 
- *  [`XamlaGripper`](#XamlaGripper): Gripper message
- *  [`XamlaGripperJointState`](#XamlaGripperJointState): Joint state of the gripper
- *  [`XamlaForceTorque`](#XamlaForceTorque): Force Torque message
- *  [`XamlaIOIMU`](#XamlaIOIMU): Message IMU
- *  [`SendCommand`](#SendCommand): Send commands to IO-Board
- *  [`EgomoGripperActivate`](#EgomoGripperActivate): Action for gripper activation
- *  [`EgomoGripperPos`](#EgomoGripperPos): Action for setting gripper position
- *  [`Troubleshooting`](#Troubleshooting): Troubleshooting
+### Overview  ###
+
+ *  [Gripper message](#XamlaGripper)
+ *  [Joint state of the gripper](#XamlaGripperJointState)
+ *  [Force Torque message](#XamlaForceTorque)
+ *  [Message IMU](#XamlaIOIMU)
+ *  [Send commands to IO-Board](#SendCommand)
+ *  [Action for gripper activation](#EgomoGripperActivate)
+ *  [Action for setting gripper position](#EgomoGripperPos)
+ *  [Troubleshooting](#Troubleshooting)
 
 <a name="XamlaGripper"></a>
 ### Topic XamlaGripper ###
 
-Gives information about the gripper. For publishing data an own message was created ([XamlaGripper.msg](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/msg)). Subscribe by typing the following in your terminal:
+Publishes the state of the gripper using [XamlaGripper.msg](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/msg). Subscribe by typing the following in your terminal:
 
     rostopic echo /XamlaEgomo/XamlaGripper
 
@@ -33,7 +35,7 @@ bool | object_gripped
 <a name="XamlaGripperJointState"></a>
 ### Topic XamlaGripperJointState ###
 
-Gives information about the gripper meeting the joint state message specification ([JointState](http://docs.ros.org/jade/api/sensor_msgs/html/msg/JointState.html)). Subscribe by typing the following in your terminal:
+Publishes the state fo the gripper as joint state messages ([JointState](http://docs.ros.org/jade/api/sensor_msgs/html/msg/JointState.html)). Subscribe by typing the following in your terminal:
 
     rostopic echo /joint_states
 
@@ -48,7 +50,7 @@ effort | float64[]
 <a name="XamlaForceTorque"></a>
 ### Topic XamlaForceTorque ###
 
-Gives information about the force torque sensor using [WrenchStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/WrenchStamped.html). Subscribe by typing the following in your terminal: 
+Publishes sensor readings of the force torque sensor using [WrenchStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/WrenchStamped.html). Subscribe by typing the following in your terminal: 
 
     rostopic echo /XamlaEgomo/XamlaForceTorque
 
@@ -60,7 +62,7 @@ wrench   | [geometry_msgs/Wrench](http://docs.ros.org/jade/api/geometry_msgs/htm
 <a name="XamlaIOIMU"></a>
 ### Topic XamlaIOIMU ###
 
-Gives information about the inertial measurement unit (IMU) using [AccelStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/AccelStamped.html). Subscribe by typing the following in your terminal: 
+Publishes sensor readings of the inertial measurement unit (IMU) using [AccelStamped](http://docs.ros.org/jade/api/geometry_msgs/html/msg/AccelStamped.html). Subscribe by typing the following in your terminal: 
 
     rostopic echo /XamlaEgomo/XamlaIOIMU
 
@@ -72,7 +74,7 @@ accel   | [geometry_msgs/Accel](http://docs.ros.org/jade/api/geometry_msgs/html/
 <a name="SendCommand"></a>
 ### Service SendCommand ###
 
-In order to send commands to the gripper this service was created ([SendCommand.srv](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/srv)). The following commands are valid:
+In order to send commands to the gripper this service was created ([SendCommand.srv](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/srv)). The following commands are available:
 
 Command | value range | description
 ---------|-----------|--------------
@@ -84,7 +86,7 @@ out0 | 0 or 1 | Turns on/off device at this board output (e.g. led, ir-led ord l
 out1 | 0 or 1 | Turns on/off device at this board output (e.g. led, ir-led ord laser)
 out2 | 0 or 1 | Turns on/off device at this board output (e.g. led, ir-led ord laser)
 
-Notice that you should reset the gripper before use. While initializing the gripper moves. Here are two examples of valid calls of the service from the terminal.
+Notice that you should reset the gripper before use. During initialization the gripper moves. Here are two examples of valid calls of the service from the terminal.
 
     rosservice call /XamlaEgomo/SendCommand "reset" 0
     rosservice call /XamlaEgomo/SendCommand "pos_cmd" 0.05
