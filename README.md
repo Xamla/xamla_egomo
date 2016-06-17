@@ -41,7 +41,7 @@ We do offer an implemented calibration routine on [request](http://xamla.com/en/
 
 ## Get an Egomo device the easy way
 
-You like the idea of open-source hardware but the process of buying parts, 3D printing, soldering etc. is too cumbersome for you and you would like to get a tested/working sensor head quickly? No problem for EUR 1499 + shipping we send you pre-assembled version of the Egomo sensor head with all parts included. If you are interested in this option please contact us via E-mail. 
+You like the idea of open-source hardware but the process of buying parts, 3D printing, soldering etc. is too cumbersome for you and you would like to get a tested/working sensor head quickly? No problem for EUR 1499 + shipping we send you a pre-assembled version of the Egomo sensor head with all parts included. If you are interested in this option please contact us via E-mail. 
 
 ### Contact ###
 
