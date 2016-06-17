@@ -2,7 +2,7 @@
 
 ### What is Xamla Egomo
 
-Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot](http://www.universal-robots.com/products/ur5-robot/) UR5 equipped with [Robotiq](http://robotiq.com/) end-of-arm technologie. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) IDE (to be released in 2017).
+Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot](http://www.universal-robots.com/) UR5 equipped with [Robotiq](http://robotiq.com/) end-of-arm technologie. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) IDE (to be released in 2017).
 For more information and product pictures visit the [egomo website](http://xamla.com/egomo).
 
 Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) using the Egomo sensor head.
