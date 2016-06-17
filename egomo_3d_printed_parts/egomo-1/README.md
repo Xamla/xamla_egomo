@@ -2,7 +2,7 @@
 
 ## Product Pictures
 
-We made took some photos to give you an impression how the finished product might look on a UR5.
+We took some photos to give you an impression how the finished sensor head looks when it is mounted on a UR5.
 
 ![Egomo left view](images/egomo_left.jpg)
 ![Egomo front view](images/egomo_front.jpg)
@@ -10,14 +10,13 @@ We made took some photos to give you an impression how the finished product migh
 ![Egomo back view](images/egomo_back.jpg)
 ![Egomo joint cap](images/egomo_joint_cap.jpg)
 
-## Options / Use Cases
+## 	Multi-use Options
 
+There are many ways to use the Egomo 3D models for your robotic research experiments:
 
-There are many ways to use our 3D models for your vision-guided robotic experiments:
+Here are some ideas:
 
-Here are just some ideas:
-
-1. Obviously you could build the full-featured Xamla Egomo-1 sensor head.
+1. Obviously you can build the full-featured Xamla Egomo-1 sensor head, optionally with or without RPi enclosure or front-camarea mount.
 2. Just use the coupling + base plate as a camera mount (conventionally cabled).
 3. Use the RPi+IO-Board enclosure stand-alone as remote ROS sensor-node or smart camera (e.g. to monitor the roboter scene from a fixed mounted RGB-D camera). 
 
@@ -34,8 +33,8 @@ The Egomo-1 sensor head consinsts of the following parts:
 
 Additionally we publish the file xamla_cap.stl which is a simple version of our custom Xamla joint cap without a hole for the power cable. It might be useful if you just want to fix a kinematic problem (collision) of the original UR5 joint cap that prevents the robot from freely rotating in all situations.
 
-## Customization / Adaption to other Robots
+## Adaption to other Robots
 
-If you are a robotics researcher and you want to adapt the Egomo 3D parts for you special needs or to adapt it to a different robot we provide on request the original CAD files. Please get in touch with us via [E-Mail](egomo@xamla.com).
+If you are a robotics researcher and you want to customize the Egomo 3D parts to your special requirements or adapt it to a different robot model we can provide you the original CAD files on request. Please get in touch with us via [E-Mail](egomo@xamla.com).
 
 
