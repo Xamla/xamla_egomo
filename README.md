@@ -1,5 +1,7 @@
 # xamla_egomo
-[Xamla Egomo](http://xamla.com/en/egomo/index.html) Sensorhead ROS Package. This package is based on [LUA](https://www.lua.org/) with [Torch](https://github.com/torch) and the wrappers
+[Xamla Egomo](http://xamla.com/en/egomo/index.html) Sensorhead ROS Package. The egomo sensorhead is a wireless based head for adaptive robotics. It is equipped with a Logitech C920 HD Camera, a Structure IO Depth-Camera and an IR-Line-Laser. In combination with an UR5 Robot equipped wih a Robotiq 2-finger-85 gripper and an optionally Robotiq FT-300 force-torque sensor you are able to solve robotic tasks with free path planning and no cables. 
+
+This package is based on [LUA](https://www.lua.org/) with [Torch](https://github.com/torch) and the wrappers
 [torch-ros](https://github.com/Xamla/torch-ros),  [torch-pcl](https://github.com/Xamla/torch-pcl)  and [torch-opencv](https://github.com/VisionLabs/torch-opencv).
 
 This packages contains the following:
