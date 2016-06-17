@@ -27,25 +27,9 @@ local heye = torch.DoubleTensor({
 {-0.9996, -0.0158, -0.0235,  0.0949},
 { 0.0000,  0.0000,  0.0000,  1.0000}})  -- 2016-06-13
 
--- Required to colorize cloud, not for actual operation
-local matrixRGB=torch.FloatTensor{
-   {873.59043129674, 0, 480.87504519504, 0}, 
-   {0, 875.86880791514, 357.51156061521, 0}, 
-   {0, 0, 1, 0}}     
-local matrixCamTrafo=torch.FloatTensor{
-   {-0.9998948829071, -0.001522834188929, -0.014418880408065, 0.027557160671132},    
-   {0.0018089833246721, -0.99980126830416, -0.019853248518212, 0.031334218255476},   
-   {-0.014385781713905, -0.019877245116661, 0.99969892688302, -0.03391795945098},    
-   {0, 0, 0, 1}}     
-
-
 
 local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
 depthcam:Connect()
-
-local webcam = egomoTools.webcam:new("web_cam")
-webcam:ConnectDefault()
-webcam:SetFocusValue(5)
 
 local gripperControl = egomoTools.gripper:new()
 gripperControl:Connect()
@@ -93,7 +77,10 @@ local function FindObjectsVirtual ()
   return result
 end
 
-
+--- 
+-- Heuristic to find grippable objects
+-- @param meanOfEachObject center point of the object found by the segmentation algorithm
+-- @param firstEigenvectorOfEachObject the corrspnding largest eigenvector of the object, i.e. main axis
 local function FindObjects(meanOfEachObject, firstEigenvectorOfEachObject)
   local result = {}
   local origin = torch.Tensor({0,0,0,1})
@@ -113,7 +100,11 @@ local function FindObjects(meanOfEachObject, firstEigenvectorOfEachObject)
   return result
 end
 
-  
+
+--- 
+-- Creates the grip pose
+-- @param target position of the object and the orientation of the object to grip
+-- @param zdistance height above z plane where to grip
 local function CreateApproachPose(target, zdistance)
   target.center[3]=0
   print("Target main axis:")
@@ -138,11 +129,17 @@ local function CreateApproachPose(target, zdistance)
 end
 
 
+--- 
+-- Creates the grip pose
+-- @param target position of the object and the orientation of the object to grip
+-- @param zdistance height above z plane where to grip
 local function CreateGripPose(target, zdistance)
    return CreateApproachPose(target, zdistance)
 end
 
-
+--- 
+-- Sets the position for dropping the objects
+-- @param orientation 4x4 torch.Tensor the orientation of the TCP when dropping positions
 local function CreateDropPose(orientation)
    local dropPoseManual = orientation:clone()
    dropPoseManual[1][4]=0.55
@@ -151,7 +148,9 @@ local function CreateDropPose(orientation)
    return dropPoseManual
 end
 
-
+--- 
+-- The picking action
+-- Robot moves to approach position, moves down and closes the gripper
 local function PickObject()
    print("picking object, approachPose: ")
   print(poses.approache)
@@ -169,7 +168,8 @@ local function PickObject()
   fsmState="pickDone"
 end
 
-
+--- 
+-- Dropping the object
 local function DropObject()
    print("moving and dropping object")
 
@@ -183,7 +183,10 @@ local function DropObject()
   fsmState="dropDone"
 end
 
-
+---
+-- Moves the robot to the overview pose.
+-- An additional colision object is added to prevent that the robot
+-- moves one of its joints into the view frustrum of the camera
 local function MoveToOverview()
    print("moveto overview")
    print(poses.overview)   
@@ -201,51 +204,14 @@ local function MoveToOverview()
 end
 
 
-
+---
+-- Transforms a 3d point measured in depth-camera coordinate system to robot base
+-- @param torch.Tensor 3xN points in camera coordinate system
+-- @param torch.Tensor 4x4 robot pose 
 local function CamToWorld(points, robotPose)
   return (robotPose * heye * points:t()):t()
 end
 
-
-local function ArrangeCloudViewWindows(winA, winB)
-   if winA ~= nil then
-      local camPos = {}
-      --[[camPos.x    =-0.11
-      camPos.y    =0.2
-      camPos.z    =-0.80
-      camPos.viewX=-0.06
-      camPos.viewY=0.05
-      camPos.viewZ=0.52
-      camPos.upX  =-0.008
-      camPos.upY  =-0.994
-      camPos.upZ  =-0.11 ]]
-
-      camPos.x    = -0.0539242
-      camPos.y    = 0.310586
-      camPos.z    = -0.7
-      camPos.viewX= -0.0514919
-      camPos.viewY= 0.15113
-      camPos.viewZ= 0.236273
-      camPos.upX  = 0.014
-      camPos.upY  = -0.91
-      camPos.upZ  = -0.41
-
-
-      winA:setCameraPosition(camPos.x, camPos.y, camPos.z,
-				  camPos.viewX, camPos.viewY, camPos.viewZ,
-				  camPos.upX, camPos.upY, camPos.upZ)
-      winA:setCameraClipDistances(0.003, 3.0)
-      winA:setSize(1280, 720)
-      winA:setPosition(60, 70)
-
-
-
-   end
-
-   if winB ~= nil then
-      print("TODO")
-   end
-end
 
 local function main(N)
    local timer = torch.Timer()
