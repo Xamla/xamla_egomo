@@ -56,7 +56,7 @@ Published data | type
 header   | [std_msgs/header](http://docs.ros.org/jade/api/std_msgs/html/msg/Header.html)
 accel   | [geometry_msgs/Accel](http://docs.ros.org/jade/api/geometry_msgs/html/msg/Accel.html)
 
-### Service SendGripperSetCommand ###
+### Service SendCommand ###
 
 In order to send commands to the gripper this service was created ([SendCommand.srv](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs/srv)). The following commands are valid:
 
