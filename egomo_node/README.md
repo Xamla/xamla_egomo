@@ -24,7 +24,7 @@ bool | object_gripped
 
 Gives information about the gripper meeting the joint state message specification ([JointState](http://docs.ros.org/jade/api/sensor_msgs/html/msg/JointState.html)). Subscribe by typing the following in your terminal:
 
-    rostopic echo /XamlaEgomo/XamlaGripperJointState
+    rostopic echo /joint_states
 
 Published data | type
 ---------|-----------
