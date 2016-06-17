@@ -1,6 +1,6 @@
 # xamla_egomo
-[Xamla Egomo](http://xamla.com/en/egomo/index.html) Sensorhead ROS Package. This package is based on
-torch-ros,  torch-pcl  and torch-opencv. Make s
+[Xamla Egomo](http://xamla.com/en/egomo/index.html) Sensorhead ROS Package. This package is based on [LUA](https://www.lua.org/) with [Torch](https://github.com/torch) and the wrappers
+[torch-ros](https://github.com/Xamla/torch-ros),  [torch-pcl](https://github.com/Xamla/torch-pcl)  and [torch-opencv](https://github.com/VisionLabs/torch-opencv).
 
 This packages contains the following:
 
