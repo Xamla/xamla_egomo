@@ -7,7 +7,7 @@ For more information and product pictures visit the [egomo website](http://xamla
 
 ![sensorhead1](https://github.com/Xamla/xamla_egomo/blob/master/egomo_3d_printed_parts/egomo-1/images/egomo_left.jpg "Egomo sensor head side view, showing that the webcam can be mounten on the side as well as in the front.")
 
-![sensorhead1](https://github.com/Xamla/xamla_egomo/blob/master/egomo_3d_printed_parts/egomo-1/images/fron.jpg "Egomo sensor head fron view")
+![sensorhead2](https://github.com/Xamla/xamla_egomo/blob/master/egomo_3d_printed_parts/egomo-1/images/egomo_front.jpg "Egomo sensor head fron view")
 
 ### Unique Features of Xamla Egomo
 
