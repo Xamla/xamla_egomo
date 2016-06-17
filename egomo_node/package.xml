@@ -3,6 +3,7 @@
   <version>1.0.0</version>
   <description>The egomo_node package</description>
   <maintainer email="egomo@xamla.com">Xamla</maintainer>
+  <url type="website">http://www.xamla.com/</url>
   <license>BSD</license>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>actionlib_msgs</build_depend>
