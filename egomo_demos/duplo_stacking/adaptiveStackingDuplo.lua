@@ -12,7 +12,6 @@ require 'ObjectsOnPlaneSegmentation'
 local duplo = require 'duploDetection'
 
 
-
 local velocity_scaling = 1.0
 
 -- Roboter and gripper control + initialisation
@@ -37,10 +36,11 @@ local heyeDepthcam = torch.DoubleTensor ({
 
 
 local heyeWebcam = duplo.handEye  -- select active handEye matrix..
+heyeWebcam[{{1,3},{4}}] = heyeWebcam[{{1,3},{4}}] / 1000.0
 
 local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
 depthcam:Connect()
-local webcam = egomoTools.webcam:new()
+local webcam = egomoTools.webcam:new("web_cam")
 webcam:ConnectDefault()
 
 

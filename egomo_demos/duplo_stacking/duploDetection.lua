@@ -22,11 +22,11 @@ duplo.intrinsics = torch.DoubleTensor({  -- Intrinsic camera matrix of rgb camer
  { 0.0000,   0.0000 ,   1.0000}
 })
 
-duplo.handEye = torch.DoubleTensor({        -- HandEye of rgb camera
-  {  0.0025,  0.7642,  0.6450,  0.0152 },
-  { -0.0007, -0.6456,  0.7637,  0.0699 },
-  {  1.0000,  0.0010,  0.0018,  0.0560 },
-  {  0.0000,  0.0000,  0.0000,  1.0000 }
+duplo.handEye = torch.DoubleTensor({
+{-0.0079,  0.7638,  0.6454,  0.0115},
+{ 0.0059, -0.6454,  0.7638,  0.0693},
+{ 1.0000,  0.0098,  0.0005,  0.0551},
+{ 0.0000,  0.0000,  0.0000,  1.0000}
 })
 
 duplo.handEye[{{1,3},4}] = duplo.handEye[{{1,3},4}] * 1000 --handEye is in mm
