@@ -14,9 +14,9 @@ local posix = require "posix"
 local GRIPPER_RESET = "gripper0.reset"
 -- sets the position of the gripper in m
 local GRIPPER_POS_CMD = "gripper0.pos_cmd"
--- sets the gripper's maximum force in N (range?)
+-- sets the gripper's maximum force
 local GRIPPER_MAX_FORCE = "gripper0.max_force"
--- sets the gripepr's maximum speed in mm/s (range?)
+-- sets the gripepr's maximum speed
 local GRIPPER_MAX_SPEED = "gripper0.max_speed"
 -- returns the gripper's state
 local GRIPPER_STATE = "gripper0.state"
