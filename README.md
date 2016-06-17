@@ -5,7 +5,7 @@
 Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot](http://www.universal-robots.com/) UR5 equipped with [Robotiq](http://robotiq.com/) end-of-arm technologie. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) IDE (to be released in 2017).
 For more information and product pictures visit the [egomo website](http://xamla.com/egomo).
 
-[sensorhead1](https://github.com/Xamla/xamla_egomo/blob/master/egomo_3d_printed_parts/egomo-1/images/egomo_left.jpg "Egomo sensor head view")
+![sensorhead1](https://github.com/Xamla/xamla_egomo/blob/master/egomo_3d_printed_parts/egomo-1/images/egomo_left.jpg "Egomo sensor head side view, showing that the webcam can be mounten on the side as well as in the front.")
 
 Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) using the Egomo sensor head.
 
