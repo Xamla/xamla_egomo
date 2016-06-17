@@ -11,10 +11,10 @@ For more information and product pictures visit the [egomo website](http://xamla
 
 ### Unique Features of Xamla Egomo
 
-* 2D+3D: full featured sensor head for RGB-D scans (RGB+Depth side cams) and visual servoing tasks (front-cam)
+* 2D+3D: side cams for RGB-D scans and front-cam for visual servoing tasks
 * NO CABLES: wireless connection of sensors and gripper!
-* ROS: all sensors + actuators exposed as ROS nodes
-* EASY: Lua client library to move robot and capture images + examples
+* ROS: all sensors + actuators are exposed as ROS nodes
+* EASY: Lua client library to move the robot and capture images + examples
 * sensor-board with additional IO ports for laser, high-power IR/white LEDs or simple grippers or tactive sensors
 * two side- and front view Logitech C920 cameras in combinaton with a structure IO depth sensor
 * option to directy connect a Robotiq 2-Finger-Gripper-85 + Robotiq FT-300 sensor 
@@ -40,7 +40,7 @@ This packages contains the following:
 
 ### Calibration ###
 
-We do offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of features such as a professional calibration (including full robot calibration).
+We offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of features such as a professional calibration (including full robot calibration).
 
 ### Get a pre-assembled Egomo device from us
 
@@ -49,6 +49,6 @@ We offer a pre-assembled version of the Egomo sensor head with all parts install
 
 ### Support / Contact ###
 
-If you have any troubles please let us know by creating an Issue. Do not hesitate to contact us via [E-mail](mailto:egomo@xamla.com) for questions, feedback and suggestions. We look forward to hear from you!  
+If you have any trouble please let us know by creating an issue. Do not hesitate to contact us via [E-mail](mailto:egomo@xamla.com) for questions, feedback and suggestions. We look forward to hear from you!  
 
 Follow [@xamla on Twitter](https://twitter.com/xamla) and [subscribe](http://xamla.com/en/egomo) to our newsletter. 
