@@ -13,9 +13,13 @@ This packages contains the following:
   * [egomo_3d_printed_parts](https://github.com/Xamla/xamla_egomo/tree/master/egomo_3d_printed_parts): CAD files for printing the case of the Egomo sensorhead.
   * [egomo_demos](https://github.com/Xamla/xamla_egomo/egomo_demos): Demos based on LUA (like pick and place objects).
   * [egomo_tools](https://github.com/Xamla/xamla_egomo/egomo_tools): Libraries offering easy to use interfaces for e.g. Gripper control.
-  * [egomo_pi_image](https://github.com/Xamla/xamla_egomo/egomo_pi_image): Image for the Raspberry PI containing everything to need with an read-only file system.
+  * [egomo_pi_image](https://github.com/Xamla/xamla_egomo/egomo_pi_image): Link and description of the Raspberry PI containing everything to need with an read-only file system.
+
+### Calibration ###
 
 We do offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of featues such a professional calibration.
+
+### Contact ###
 
 If you have any troubles please let us know by creating an Issue. Do not hesitate to [contact](http://xamla.com/en/contact/index.html) us for questions, feedback and
 suggestions. We look forward to hear from you!
