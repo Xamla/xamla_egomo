@@ -26,16 +26,16 @@ This package is based on [LUA](https://www.lua.org/) with [Torch](https://github
 
 This packages contains the following:
 
-  * [xamla_egomo](https://github.com/Xamla/xamla_egomo/tree/master/xamla_egomo) Metapackages
-  * [egomo_msgs](https://github.com/Xamla/xamla_egomo/tree/master/egomo_msgs): Messages, Services, Actions in order to talk to Gripper, Force-Torque Sensor, RGB-Camera, Depth-Camera, Laser, LED
-  * [egomo_node](https://github.com/Xamla/xamla_egomo/tree/master/egomo_node): LUA node which is responsible for the communication with any parts connected to the IO-Board (e.g. Gripper, Force-Torque, LED)
-  * [egomo_ur5](https://github.com/Xamla/xamla_egomo/tree/master/egomo_ur5): Contains URDF Robot description of the UR5 equipped with Egomo sensor head as well as launches for e.g. gazebo.
-  * [egomo_webcam](https://github.com/Xamla/xamla_egomo/egomo_webcam): Contains ros-node for the Logitech C920 Webcam.
-  * [egomo_depthcam](https://github.com/Xamla/xamla_egomo/egomo_depthcam): Contains ros-node for the Strucure-IO sensor.
-  * [egomo_3d_printed_parts](https://github.com/Xamla/xamla_egomo/tree/master/egomo_3d_printed_parts): CAD files for printing the case of the Egomo sensor head.
-  * [egomo_demos](https://github.com/Xamla/xamla_egomo/egomo_demos): Demos based on LUA (like pick and place objects).
-  * [egomo_tools](https://github.com/Xamla/xamla_egomo/egomo_tools): Libraries offering easy to use interfaces for e.g. Gripper control.
-  * [egomo_pi_image](https://github.com/Xamla/xamla_egomo/egomo_pi_image): Link and description of the Raspberry PI containing everything to need with an read-only file system.
+  * [xamla_egomo](/xamla_egomo) Metapackages
+  * [egomo_msgs](/egomo_msgs): Messages, Services, Actions in order to talk to Gripper, Force-Torque Sensor, RGB-Camera, Depth-Camera, Laser, LED
+  * [egomo_node](/egomo_node): LUA node which is responsible for the communication with any parts connected to the IO-Board (e.g. Gripper, Force-Torque, LED)
+  * [egomo_ur5](/egomo_ur5): Contains URDF Robot description of the UR5 equipped with Egomo sensor head as well as launches for e.g. gazebo.
+  * [egomo_webcam](/egomo_webcam): Contains ros-node for the Logitech C920 Webcam.
+  * [egomo_depthcam](/egomo_depthcam): Contains ros-node for the Strucure-IO sensor.
+  * [egomo_3d_printed_parts](/egomo_3d_printed_parts): CAD files for printing the case of the Egomo sensor head.
+  * [egomo_demos](/egomo_demos): Demos based on LUA (like pick and place objects).
+  * [egomo_tools](/egomo_tools): Libraries offering easy to use interfaces for e.g. Gripper control.
+  * [egomo_pi_image](/egomo_pi_image): Link and description of the Raspberry PI containing everything to need with an read-only file system.
 
 ### Calibration ###
 
