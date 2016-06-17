@@ -38,6 +38,8 @@ local heyeDepthcam = torch.DoubleTensor ({
 local heyeWebcam = duplo.handEye:clone()  -- select active handEye matrix..
 heyeWebcam[{{1,3},{4}}] = heyeWebcam[{{1,3},{4}}] / 1000.0
 
+print("HEye")
+print(heyeWebcam)
 
 local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
 depthcam:Connect()
