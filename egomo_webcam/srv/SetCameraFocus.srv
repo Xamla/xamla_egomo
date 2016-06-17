@@ -1,0 +1,4 @@
+bool autofocus
+uint8 focusValue
+---
+uint8 result

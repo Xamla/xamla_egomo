@@ -1,0 +1,10 @@
+<launch>
+  <node name="egomo_webcam" pkg="egomo_webcam" type="egomo_webcam_node" output="screen">
+    <!-- set device name and resolution -->
+      <param name="video_device" value="/dev/video0" />
+      <param name="image_width_still" value="960" />
+      <param name="image_height_still" value="720" />
+      <param name="image_width_stream" value="320" />
+      <param name="image_height_stream" value="240" />
+  </node>
+</launch>

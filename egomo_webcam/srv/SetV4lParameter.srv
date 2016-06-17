@@ -1,0 +1,4 @@
+string param_name
+int16 value
+---
+bool result
