@@ -13,12 +13,12 @@ duplo.directory = '/home/hoppe/data/duplo_accuracy_test/jitter/duplo1/'
 duplo.rMin = 15 --radius min (pixel in image of brick nobs)
 duplo.rMax = 40 -- radius max (pixel in image of brick nobs)
 duplo.circleGradientThreshold = 30 -- Threshold for finding circles. If lower more circles are found
-duplo.distCoeffs = torch.zeros(5,1) -- Distortion coefficients of rgb camera
+duplo.distCoeffs = torch.Tensor({0.1130,-0.1899, 0.0000, 0.0000, 0.0000}) -- Distortion coefficients of rgb camera
 duplo.expectedZ = 3 -- We expect that out duplo is located on the table at z = duplo.expectedZ (in mm)
 
 duplo.intrinsics = torch.DoubleTensor({  -- Intrinsic camera matrix of rgb camera (C920)
- { 918.3122, 0.0000,  481.8074},
- { 0.0000,   917.5487,  359.0547},
+ { 928.3797, 0.0000,  474.7792},
+ { 0.0000,   928.3797,  361.0547},
  { 0.0000,   0.0000 ,   1.0000}
 })
 
@@ -157,6 +157,8 @@ end
 -- @param 4x4 torch.Tensor robot TCP
 function duplo.addImage(image, robotPoseTC)
 
+  --local image = cv.resize{src = image_raw, dsize={960,720}}
+
   local image_undist = cv.undistort{src = image, cameraMatrix = duplo.intrinsics, distCoeffs = duplo.distCoeffs}
   print('undistorted...')
   local found, detectedCircles = duplo.getOrderedCircleCenters(image_undist)
@@ -220,7 +222,7 @@ function duplo.matchByEpipolarGeometry(expectedMinZ, expectedMaxZ)
 
       if j > i then
 
-          local robotP_i = duplo.triangulationData[i].robotPose
+          local robotP_i = duplo.triangulationData[i].robotPose          
           local robotP_j = duplo.triangulationData[j].robotPose
           local pose_i = torch.inverse(robotP_i*duplo.handEye)
           local pose_j = torch.inverse(robotP_j*duplo.handEye)
@@ -245,7 +247,7 @@ function duplo.matchByEpipolarGeometry(expectedMinZ, expectedMaxZ)
                -- Calculate the fundamental mat
                local d = math.abs(xamla3d.sampsonDistance(p1, p2, F))
 
-               if (d < 200) then
+               if (d < 80) then
                  local meas = {}
                  table.insert(meas, p1[{{1,2}, 1}]:view(1,2):clone())
                  table.insert(meas, p2[{{1,2}, 1}]:view(1,2):clone())
@@ -254,7 +256,7 @@ function duplo.matchByEpipolarGeometry(expectedMinZ, expectedMaxZ)
                  table.insert(Proj, ProjI)
                  table.insert(Proj, ProjJ)
                  local s, X = xamla3d.linearTriangulation(Proj, meas)
-                 if ( X[3][1] > expectedMinZ and X[3][1] < expectedMaxZ) then
+                 if (X[3][1] > expectedMinZ and X[3][1] < expectedMaxZ) then
                     local m = {}
                     m.imageID1 = i
                     m.imageID2 = j
@@ -448,6 +450,7 @@ function duplo.triangulatePoints(minZ, maxZ, verbose)
 
  -- find the matches (image pairwise) by assuming that the z coordinate of the upper edge of the brick is located within minZ and maxZ
  local matches = duplo.matchByEpipolarGeometry(minZ, maxZ) 
+ print("MinZ "..minZ .. "MaxZ" .. maxZ)
  -- linkes the pairwise matches together
  local linkedMatches = duplo.linkMeasurements(matches)
 

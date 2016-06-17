@@ -35,8 +35,9 @@ local heyeDepthcam = torch.DoubleTensor ({
       {  0.0000,  0.0000,  0.0000,  1.0000 }})
 
 
-local heyeWebcam = duplo.handEye  -- select active handEye matrix..
+local heyeWebcam = duplo.handEye:clone()  -- select active handEye matrix..
 heyeWebcam[{{1,3},{4}}] = heyeWebcam[{{1,3},{4}}] / 1000.0
+
 
 local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
 depthcam:Connect()
@@ -115,7 +116,7 @@ end
 
 
 function ScanDuplo(targetPoint, expectedDuploZ)
-  local distance=0.11 --to target point
+  local distance=0.15 --to target point
 
   imageCounter = 0
   robotPosesImages = {}
@@ -137,7 +138,7 @@ function ScanDuplo(targetPoint, expectedDuploZ)
   azimuthalAngle[2]=-0.1
   upInverse[2]=true
   targetPoints[2] = targetPoint:clone()
-  targetPoints[2][2] = targetPoints[2][2] + 0.01 -- 1cm offset from first camera
+  targetPoints[2][2] = targetPoints[2][2] + 0.015 -- 1cm offset from first camera
 
   -- reset the duplo detection module
    duplo.reset()
@@ -156,8 +157,9 @@ function ScanDuplo(targetPoint, expectedDuploZ)
     roboControl:MoveRobotTo(movePose)
     sys.sleep(0.2)  -- wait for controller convergence
     local img=webcam:GrabGrayscaleImgROS() -- Take image
-    print(img:size())
-    print("ImageOK")
+    if img == nil then
+      print("Image not captured!")      
+    end
 
     --cv.imshow{"webcam capture result",img}
     --cv.waitKey{-1}
@@ -225,7 +227,8 @@ function CreatePoses()
    local rotTmp = poseTmp:getRotation()
 
    -- pose to view the whole scene
-   poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.2, 0.0}), 0.55, math.rad(-45), math.rad(20), heyeWebcam)
+   poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.5, 0.0}), 0.55, math.rad(45), math.rad(0.1), heyeWebcam)
+   --poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.2, 0.0}), 0.55, math.rad(-45), math.rad(20), heyeWebcam)
 
    -- base pose before moving down to stack the duplo
    poseTmp:setOrigin(torch.Tensor({-0.2545,0.508, 0.231}))
@@ -247,7 +250,7 @@ end
 -- @param z value of the bricks upper edge in robot coordinates
 function ScanTargetPosition(originalTarget, estimatedDuploHeightZm)
 
-  assert(estimatedDuploHeightZm > 0 and estimatedDuploHeightZm < 1)
+  assert(estimatedDuploHeightZm > -0.1 and estimatedDuploHeightZm < 1)
   local scanTargetPosition = originalTarget[{{1,3},4}]:clone()
   -- our destination where we want to look
   scanTargetPosition[3] = estimatedDuploHeightZm
@@ -292,6 +295,8 @@ function main()
 
    --local viewer = pcl.CloudViewer()
    for ii=1, 20 do
+      print("Overview pose:")
+      print(poseList.overview)
       roboControl:MoveRobotTo(poseList.overview)
       local cloud = depthcam:GrabPointCloud()
       --cloud:savePCDFile("cloud.pcd")
