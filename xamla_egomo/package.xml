@@ -4,7 +4,7 @@
   <description>Xamla Egomo</description>
   <maintainer email="egomo@xamla.com">Xamla</maintainer>
   <license>BSD</license>
-  <url type="website">http://www.xamla.com</url>
+  <url type="website">http://www.xamla.com/</url>
   <buildtool_depend>catkin</buildtool_depend>
   <run_depend>egomo_msgs</run_depend>
   <run_depend>egomo_ur5</run_depend>
