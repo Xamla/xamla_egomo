@@ -76,6 +76,10 @@ Notice that you should reset the gripper before use. While initializing the grip
     rosservice call /XamlaEgomo/SendCommand "pos_cmd" 0.05
     rosservice call /XamlaEgomo/SendCommand "out0" 0
     
+### Action EgomoGripperActivate ###
+
+This action can be used to activate/deactivate the gripper ([EgomoGripperActivate.action](https://github.com/Xamla/xamla_egomo/blob/master/egomo_msgs/action/EgomoGripperActivate.action)). It gives feedback about whether the gripper has been activated.
+    
 ## Troubleshooting FAQ
 
  - Q1: I get the error "No device could be found!!!".
