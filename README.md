@@ -1,2 +1,2 @@
 # xamla_egomo
-Xamla Egomo Sensorhead ROS Package
+[Xamla Egomo](http://xamla.com/en/egomo/index.html) Sensorhead ROS Package.
