@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<robot name="egomo_sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+    <xacro:include filename="$(find egomo_ur5)/urdf/default_egomo_sensor_parameters.xacro" />
+    <xacro:macro name="egomo_sensor" params="prefix parent *origin">
+        <property name="pi" value="3.1415926535898" />
+        <!-- ========================================== -->
+        <!-- Mount the force torque sensor (fts) to the robot -->
+        <joint name="${prefix}fts_to_robot" type="fixed">
+            <parent link="${parent}" />
+            <child link="fts_robotside" />
+            <xacro:insert_block name="origin" />
+        </joint>
+        <!-- force torque sensor (robotiq) -->
+        <link name="${prefix}fts_robotside">
+            <inertial>
+                <origin rpy="0 0 0" xyz="0 0 0" />
+                <mass value="0.65" />
+                <inertia ixx="0.000661171875" ixy="0" ixz="0" iyy="0.000661171875" iyz="0" izz="0.00117" />
+            </inertial>
+            <visual>
+                <origin rpy="0 ${pi} -${pi/2}" xyz="0 0 0.0375" />
+                <geometry>
+                    <mesh filename="package://egomo_ur5/meshes/robotiq-ft300/visual/ft300.dae" />
+                </geometry>
+            </visual>
+            <collision>
+                <origin rpy="0 ${pi} -${pi/2}" xyz="0 0 0.0375" />
+                <geometry>
+                    <mesh filename="package://egomo_ur5/meshes/robotiq-ft300/collision/ft300.stl" />
+                </geometry>
+            </collision>
+        </link>
+        <!-- virtual measurement frame -->
+        <joint name="${prefix}measurment_joint" type="fixed">
+            <origin rpy="0 0 0" xyz="0 0 0.01625" />
+            <parent link="${prefix}fts_robotside" />
+            <child link="${prefix}robotiq_force_torque_frame_id" />
+        </joint>
+        <link name="${prefix}robotiq_force_torque_frame_id" />
+        <!-- toolside frame -->
+        <joint name="${prefix}toolside_joint" type="fixed">
+            <origin rpy="0 0 0" xyz="0 0 0.0375" />
+            <parent link="${prefix}fts_robotside" />
+            <child link="${prefix}fts_toolside" />
+        </joint>
+        <link name="${prefix}fts_toolside" />
+        <!-- ========================================== -->
+	  <link name="camera_robotside">
+	    <visual>
+	      <origin rpy="0 0 0" xyz="0 0 0"/>
+	      <geometry>
+		<mesh filename="package://egomo_ur5/meshes/egomo-1/visual/egomo-1.dae"/>
+	      </geometry>
+	      <material name="white">
+		<color rgba="1 1 1 1"/>
+	      </material>
+	    </visual>
+	    <collision>
+	      <origin rpy="0 0 0" xyz="0 0 0"/>
+	      <geometry>
+		<mesh filename="package://egomo_ur5/meshes/egomo-1/collision/egomo-1.stl"/>
+	      </geometry>
+	    </collision>
+	  </link>
+        <!-- Mount the sensor mount to the robot -->
+        <joint name="${prefix}camera_to_robot" type="fixed">
+            <parent link="${parent}" />
+            <child link="camera_robotside" />
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </joint>
+
+ 	<!-- ========================================== -->
+
+        <link name="${prefix}egomo_side_cam">
+        </link>
+	<!-- Mount the cameras to the robot -->
+        <joint name="${prefix}egomo_side_cam_to_robot" type="fixed">
+            <parent link="${parent}" />
+            <child link="egomo_side_cam" />
+	    <xacro:insert_block name="egomo_side_cam_origin" />
+        </joint>
+ 	<!-- ========================================== -->
+        <link name="${prefix}egomo_front_cam">
+        </link>
+        <!-- Mount the cameras to the robot -->
+        <joint name="${prefix}egomo_front_cam_to_robot" type="fixed">
+            <parent link="${parent}" />
+            <child link="egomo_front_cam" />
+
+	    <xacro:insert_block name="egomo_front_cam_origin" />
+        </joint>
+
+	<!-- ========================================== -->
+        <link name="${prefix}egomo_depth_cam">          
+        </link>
+        <!-- Mount the cameras to the robot -->
+        <joint name="${prefix}egomo_depth_cam_to_robot" type="fixed">
+            <parent link="${parent}" />
+            <child link="egomo_depth_cam" />
+	    <xacro:insert_block name="egomo_depth_cam_origin" />
+        </joint>
+
+    </xacro:macro>
+</robot>
