@@ -1,0 +1,11 @@
+std_msgs/Header header
+uint32 timeCapture
+uint32 timeSend_sec
+uint32 timeSend_usec
+uint32 height
+uint32 width
+uint8 is_bigendian
+uint32 step
+uint32 data_size
+uint32 data_size_uncompressed
+uint8[] data

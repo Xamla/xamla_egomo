@@ -1,0 +1,7 @@
+int8 camStream
+uint32 imgWidth
+uint32 imgHeight
+int8 irProjector
+---
+bool success
+string msg
