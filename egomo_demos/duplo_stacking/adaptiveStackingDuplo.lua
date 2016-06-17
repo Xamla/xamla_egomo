@@ -227,8 +227,8 @@ function CreatePoses()
    local rotTmp = poseTmp:getRotation()
 
    -- pose to view the whole scene
-   poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.5, 0.0}), 0.55, math.rad(45), math.rad(0.1), heyeWebcam)
-   --poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.2, 0.0}), 0.55, math.rad(-45), math.rad(20), heyeWebcam)
+   --poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.50, 0}), 0.55, math.rad(-45), math.rad(0.5), heyeDepthcam)
+   poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.2, 0.0}), 0.55, math.rad(-45), math.rad(20), heyeWebcam)
 
    -- base pose before moving down to stack the duplo
    poseTmp:setOrigin(torch.Tensor({-0.2545,0.508, 0.231}))
