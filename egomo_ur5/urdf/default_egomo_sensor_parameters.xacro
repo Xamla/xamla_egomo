@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<xacro:property name="egomo_side_cam_origin">
+  <origin rpy="-2.4191 -1.5692 0.1464" xyz="0.0151 0.0696 0.0558" />
+</xacro:property>
+<xacro:property name="egomo_front_cam_origin">
+  <origin rpy="0 0 0" xyz="0 0 0" />
+</xacro:property>
+<xacro:property name="egomo_depth_cam_origin">
+  <origin rpy="-2.5471 1.5425 -1.6612" xyz="0.0318 0.0442 0.0949" />
+</xacro:property>
+<xacro:property name="egomo_line_laser_origin">
+  <origin rpy="-2.4191 -1.5692 0.1464" xyz="0.0151 0.0696 0.0558" />
+</xacro:property>
+</robot>

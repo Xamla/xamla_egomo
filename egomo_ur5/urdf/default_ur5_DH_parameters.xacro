@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <property name="theta_1" value="-0.00205442" />
+    <property name="ur5_d1" value="0.089159" />
+    <property name="ur5_a1" value="0.0" />
+    <property name="alpha_1" value="1.57718" />
+    
+    <property name="theta_2" value="-0.000123686" />
+    <property name="ur5_d2" value="0.0" />
+    <property name="ur5_a2" value="0.42500" />
+    <property name="alpha_2" value="-0.00201947" />
+    
+    <property name="theta_3" value="-0.000189364" />
+    <property name="ur5_d3" value="0.0" />
+    <property name="ur5_a3" value="0.39225" />
+    <property name="alpha_3" value="-0.00944871" />
+    
+    <property name="theta_4" value="0.000488426" />
+    <property name="ur5_d4" value="-0.10915" />
+    <property name="ur5_a4" value="0.0" />
+    <property name="alpha_4" value="1.57342" />
+    
+    <property name="theta_5" value="-0.000123914" />
+    <property name="ur5_d5" value="0.09465" />
+    <property name="ur5_a5" value="0.0" />
+    <property name="alpha_5" value="-1.57255" />
+    
+    <property name="theta_6" value="3.14254" />
+    <property name="ur5_d6" value="-0.0823" />
+    <property name="ur5_a6" value="0.0" />
+    <property name="alpha_6" value="3.14331" />
+
+</robot>
