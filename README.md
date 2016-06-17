@@ -44,4 +44,4 @@ You like the idea of open-source hardware but the process of buying parts, 3D pr
 ### Contact ###
 
 If you have any troubles please let us know by creating an Issue. Do not hesitate to [contact](http://xamla.com/en/contact/index.html) us for questions, feedback and
-suggestions. Follow @xamla on [github](https://github.com/Xamla) & [Twitter](https://twitter.com/xamla), [subscribe](http://xamla.com/en/egomo) to our newsletter. 
+suggestions. Follow @xamla on [Github](https://github.com/Xamla), [Twitter](https://twitter.com/xamla) or [subscribe](http://xamla.com/en/egomo) to our newsletter. We look forward to here from you.
