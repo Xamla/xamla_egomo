@@ -17,5 +17,5 @@ This packages contains the following:
 
 We do offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of featues such a professional calibration.
 
-If you have any troubles please let us know by creating an Issue. Do not hesitate to contact us for questions, feedback and
+If you have any troubles please let us know by creating an Issue. Do not hesitate to [contact](http://xamla.com/en/contact/index.html) us for questions, feedback and
 suggestions. We look forward to hear from you!
