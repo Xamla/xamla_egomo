@@ -34,19 +34,18 @@ local heyeDepthcam = torch.DoubleTensor ({
       { -1.0000,  0.0002,  0.0005,  0.0806 },
       {  0.0000,  0.0000,  0.0000,  1.0000 }})
 
-
+-- Get the handEye matrix from the duplo detection module
 local heyeWebcam = duplo.handEye:clone()  -- select active handEye matrix..
 heyeWebcam[{{1,3},{4}}] = heyeWebcam[{{1,3},{4}}] / 1000.0
 
-print("HEye")
-print(heyeWebcam)
-
+-- Connect to depthcam and webcam
 local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
 depthcam:Connect()
 local webcam = egomoTools.webcam:new("web_cam")
 webcam:ConnectDefault()
 
 
+-- initialize robots movegroups and scene
 local ps = roboControl:GetPlanningSceneInterface()
 local rosMoveGroup = roboControl.rosMoveGroup --roboControl:GetMoveGroup()
 
@@ -117,6 +116,13 @@ function move_to_cart(pose)
 end
 
 
+---
+-- This function scans the exact position of the duplo brick
+-- It moves in a certain distance to the target point, makes two images from 
+-- different positions to then triangulate the knobs positions.
+-- @param targetPoint point where the robot's camera is looking to
+-- @param expectedDuploZ z coordinate of the upper edge of the brick
+-- @return the orientation and center point of the brick if found, otherwise nil
 function ScanDuplo(targetPoint, expectedDuploZ)
   local distance=0.15 --to target point
 
@@ -197,7 +203,7 @@ function ScanDuplo(targetPoint, expectedDuploZ)
   return pose, center:view(3,1) / 1000.0
 end
 
-
+-- Initialize the segmentation class
 local segmentation = ObjectsOnPlaneSegmentation{
   distance_threshold = 0.02,
   crop_radius = 1,
@@ -268,11 +274,13 @@ function ScanTargetPosition(originalTarget, estimatedDuploHeightZm)
 end
 
 
+---
+-- main function that is called when starting the script
 function main()
 
+  ------ PLEASE ADAPT THESE VALUES TO YOUR ENVIRONMENT--------------------------------
   local upper_z_target = 0.003 -- The z value of the duplo that is located at the target position
   local upper_z_normal_brick = -0.008 --The z value of the duplo that is located at the target position
-
 
   local poseList = CreatePoses()
 
@@ -292,19 +300,15 @@ function main()
     end
    end
 
-   print("Z: "..poseList.place[3][4])
    local targetPos = ScanTargetPosition(poseList.place:clone(), upper_z_target)
 
-   --local viewer = pcl.CloudViewer()
    for ii=1, 20 do
       print("Overview pose:")
       print(poseList.overview)
       roboControl:MoveRobotTo(poseList.overview)
       local cloud = depthcam:GrabPointCloud()
-      --cloud:savePCDFile("cloud.pcd")
 
-  --viewer:showCloud(cloud)
-    print("segmenting")
+      print("segmenting")
       local segmentationResult, objectPoints, objectIndices = segmentation:process(cloud)
       if segmentationResult and segmentationResult.meanOfEachCluster:nElement() > 0 then
 
@@ -317,7 +321,7 @@ function main()
       -- The duplo detection itself is very primitive
       for i = 1, segmentationResult.meanOfEachCluster:size()[1] do
         local point = segmentationResult.meanOfEachCluster[{i, {1,3}}]
-        if (point[3] < upper_z_normal_brick + 0.02 and point[3] > upper_z_normal_brick - 0.02) then --typically center of a duplo is below the table
+        if (point[3] < upper_z_normal_brick + 0.02 and point[3] > upper_z_normal_brick - 0.02) then --we only take care of objects that are close to the expected brick z position
           scanPosition = point
           break
         end
@@ -330,9 +334,8 @@ function main()
         scanPosition[3] = 0.0
         local counter=1
         while duploPose == nil and counter< 5 do
-          duploPose=ScanDuplo(scanPosition,  upper_z_normal_brick * 1000.0) ---8 indicates that the top of the duplo is located at z = -8 mm
+          duploPose=ScanDuplo(scanPosition,  upper_z_normal_brick * 1000.0)
           counter = counter+1
-          print("counter: "..counter)
         end
       end
 
