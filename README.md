@@ -2,7 +2,7 @@
 
 ### What is Xamla Egomo
 
-Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a Universal Robot UR5 equipped with Robotiq end-of-arm technologie. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) IDE (to be released in 2017).
+Egomo is an open-source research sensor head developed at [Xamla](http://www.xamla.com/) for adaptive robotics research on a [Universal Robot](http://www.universal-robots.com/products/ur5-robot/) UR5 equipped with [Robotiq](http://robotiq.com/) end-of-arm technologie. It acts as a low-cost, 3D-printable reference smart-sensor device for our [ROSvita](http://www.xamla.com/rosvita/) IDE (to be released in 2017).
 For more information and product pictures visit the [egomo website](http://xamla.com/egomo).
 
 Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) using the Egomo sensor head.
@@ -10,7 +10,7 @@ Watch our robot [stacking duplos](https://www.youtube.com/watch?v=uo04vuXcwlw) u
 ### Unique Features of Xamla Egomo
 
 * 2D+3D: full featured sensor head for RGB-D scans (RGB+Depth side cams) and visual servoing tasks (front-cam)
-* NO CABELS: wireless connection of sensors and gripper!
+* NO CABLES: wireless connection of sensors and gripper!
 * ROS: all sensors + actuators exposed as ROS nodes
 * EASY: Lua client library to move robot and capture images + examples
 * sensor-board with additional IO ports for laser, high-power IR/white LEDs or simple grippers or tactive sensors
@@ -46,4 +46,4 @@ You like the idea of open-source hardware but the process of buying parts, 3D pr
 ### Contact ###
 
 If you have any troubles please let us know by creating an Issue. Do not hesitate to [contact](http://xamla.com/en/contact/index.html) us for questions, feedback and
-suggestions. Follow @xamla on [Github](https://github.com/Xamla), [Twitter](https://twitter.com/xamla) or [subscribe](http://xamla.com/en/egomo) to our newsletter. We look forward to here from you.
+suggestions. Follow @xamla on [GitHub](https://github.com/Xamla), [Twitter](https://twitter.com/xamla) or [subscribe](http://xamla.com/en/egomo) to our newsletter. We look forward to hear from you.
