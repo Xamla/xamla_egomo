@@ -79,6 +79,10 @@ Notice that you should reset the gripper before use. While initializing the grip
 ### Action EgomoGripperActivate ###
 
 This action can be used to activate/deactivate the gripper ([EgomoGripperActivate.action](https://github.com/Xamla/xamla_egomo/blob/master/egomo_msgs/action/EgomoGripperActivate.action)). It gives feedback about whether the gripper has been activated.
+
+type | name | description
+---------|-----------
+bool   | activate | true to activate gripper - false to deactivate gripper
     
 ## Troubleshooting FAQ
 
