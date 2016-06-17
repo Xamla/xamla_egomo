@@ -310,7 +310,7 @@ function main()
       -- The duplo detection itself is very primitive
       for i = 1, segmentationResult.meanOfEachCluster:size()[1] do
         local point = segmentationResult.meanOfEachCluster[{i, {1,3}}]
-        if (point[3] < 0.01 and point[3] > -0.03) then--typically center of a duplo is below the table
+        if (point[3] < upper_z_normal_brick + 0.02 and point[3] > upper_z_normal_brick - 0.02) then --typically center of a duplo is below the table
           scanPosition = point
           break
         end
@@ -377,17 +377,12 @@ function main()
         local newPlacePosition = ScanTargetPosition(posePlace, upper_z_target + (stackHeight-1)* 0.019)
         if newPlacePosition then
 
-          print("--------------Old Place position:")
-          print(poseList.place)
           local z = poseList.place[3][4]
 	  poseList.place = newPlacePosition:clone()
-          poseList.place[3][4] = z
+          poseList.place[3][4] = z -- height of our stackes bricks
           poseList.prePlace = poseList.place:clone()
           poseList.prePlace[3][4] = poseList.prePlace[3][4]+0.05
 
-
-          print("--------------New Place position:")
-          print(poseList.place)
 	end
         stackHeight = stackHeight + 1
 
