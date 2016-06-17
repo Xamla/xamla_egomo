@@ -42,11 +42,13 @@ This packages contains the following:
 
 We do offer an implemented calibration routine on [request](http://xamla.com/en/contact/index.html) as well as CAD-Files when you would like to adapt the sensor head for another robot. In 2017 we plan to offer you [ROSVITA](http://xamla.com/en/rosvita/index.html) which brings a lot of features such as a professional calibration (including full robot calibration).
 
-### Get an Egomo device the easy way
+### Get a pre-assembled Egomo device from us
 
-You like the idea of open-source hardware but the process of buying parts, 3D printing, soldering etc. is too cumbersome for you and you would like to get a tested/working sensor head quickly? No problem for EUR 1499 + shipping we send you a pre-assembled version of the Egomo sensor head with all parts (3 sensors, RPi, IO-Board, cables, microSD card with our customized RPi operating system image) included. If you are interested in this option please contact us via [E-mail](mailto:egomo@xamla.com).
+You like the idea of open-source hardware but the process of buying parts, 3D printing, soldering etc. is too cumbersome and time-intensive for you and you would like to get a tested/working sensor head quickly?  
+We offer a pre-assembled version of the Egomo sensor head with all parts installed and tested (good quality 3D printed parts made from ABS Ultrat, 2x Logitech C920 Web-Cam, 3x white LED, 1x IR LED, Structure IO, RPi 3, Xamla IO-Board,  shortened cables, our customized RPi operating system on a 16 GB class 10 microSD card and a 20mW 830nm IR line laser (depending on your country's import restrictions)) for EUR 1499 + shipping. If you are interested in this option please contact us via [E-mail](mailto:egomo@xamla.com).
 
-### Support ###
+### Support / Contact ###
 
-If you have any troubles please let us know by creating an Issue. Do not hesitate to contact us via [E-mail](mailto:egomo@xamla.com) for questions, feedback and
-suggestions. Follow @xamla on [GitHub](https://github.com/Xamla), [Twitter](https://twitter.com/xamla) or [subscribe](http://xamla.com/en/egomo) to our newsletter. We look forward to hear from you!
+If you have any troubles please let us know by creating an Issue. Do not hesitate to contact us via [E-mail](mailto:egomo@xamla.com) for questions, feedback and suggestions. We look forward to hear from you!  
+
+Follow [@xamla on Twitter](https://twitter.com/xamla) and [subscribe](http://xamla.com/en/egomo) to our newsletter. 
