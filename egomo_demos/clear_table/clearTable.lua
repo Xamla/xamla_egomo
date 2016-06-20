@@ -28,7 +28,7 @@ local heye = torch.DoubleTensor({
 { 0.0000,  0.0000,  0.0000,  1.0000}})  -- 2016-06-13
 
 
-local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
+local depthcam=egomoTools.structureio:new(camIntrinsicsIR, "egomo_depthcam")
 depthcam:Connect()
 
 local gripperControl = egomoTools.gripper:new()
