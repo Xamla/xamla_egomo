@@ -75,7 +75,7 @@ local GRIPPER_FORCE = 255
     planning_scene_interface = robot_control:GetPlanningSceneInterface()
     tf = ros.tf
 
-    depthcam = egomo_tools.structureio:new(CAM_INTRINSICS_IR)
+    depthcam = egomo_tools.structureio:new(CAM_INTRINSICS_IR, "egomo_depthcam")
     depthcam:Connect()
 
     gripper_control = egomo_tools.gripper:new()
@@ -145,7 +145,6 @@ local GRIPPER_FORCE = 255
     print(rot_pose)
     return rot_pose
   end
-
 
   ---
   -- Creates the grip pose
