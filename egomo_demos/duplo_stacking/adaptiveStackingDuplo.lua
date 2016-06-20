@@ -34,18 +34,19 @@ local heyeDepthcam = torch.DoubleTensor ({
       { -1.0000,  0.0002,  0.0005,  0.0806 },
       {  0.0000,  0.0000,  0.0000,  1.0000 }})
 
--- Get the handEye matrix from the duplo detection module
+
 local heyeWebcam = duplo.handEye:clone()  -- select active handEye matrix..
 heyeWebcam[{{1,3},{4}}] = heyeWebcam[{{1,3},{4}}] / 1000.0
 
--- Connect to depthcam and webcam
-local depthcam=egomoTools.structureio:new(camIntrinsicsIR)
+print("HEye")
+print(heyeWebcam)
+
+local depthcam=egomoTools.structureio:new(camIntrinsicsIR, "egomo_depthcam")
 depthcam:Connect()
-local webcam = egomoTools.webcam:new("web_cam")
+local webcam = egomoTools.webcam:new("egomo_webcam")
 webcam:ConnectDefault()
 
 
--- initialize robots movegroups and scene
 local ps = roboControl:GetPlanningSceneInterface()
 local rosMoveGroup = roboControl.rosMoveGroup --roboControl:GetMoveGroup()
 
@@ -203,7 +204,7 @@ function ScanDuplo(targetPoint, expectedDuploZ)
   return pose, center:view(3,1) / 1000.0
 end
 
--- Initialize the segmentation class
+
 local segmentation = ObjectsOnPlaneSegmentation{
   distance_threshold = 0.02,
   crop_radius = 1,
@@ -236,7 +237,7 @@ function CreatePoses()
 
    -- pose to view the whole scene
    --poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.50, 0}), 0.55, math.rad(-45), math.rad(0.5), heyeDepthcam)
-   poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.1, 0.2, 0.0}), 0.55, math.rad(-45), math.rad(20), heyeWebcam)
+   poseList.overview = roboControl:WebCamLookAt(torch.DoubleTensor({0.2, 0.4, 0.0}), 0.55, math.rad(-45), math.rad(10), heyeWebcam)
 
    -- base pose before moving down to stack the duplo
    poseTmp:setOrigin(torch.Tensor({-0.2545,0.508, 0.231}))
@@ -282,6 +283,7 @@ function main()
   local upper_z_target = 0.003 -- The z value of the duplo that is located at the target position
   local upper_z_normal_brick = -0.008 --The z value of the duplo that is located at the target position
 
+
   local poseList = CreatePoses()
 
   local stackHeight = 2
@@ -300,15 +302,17 @@ function main()
     end
    end
 
+   print("Z: "..poseList.place[3][4])
    local targetPos = ScanTargetPosition(poseList.place:clone(), upper_z_target)
 
+   --local viewer = pcl.CloudViewer()
    for ii=1, 20 do
       print("Overview pose:")
       print(poseList.overview)
       roboControl:MoveRobotTo(poseList.overview)
       local cloud = depthcam:GrabPointCloud()
-
-      print("segmenting")
+     
+    print("segmenting")
       local segmentationResult, objectPoints, objectIndices = segmentation:process(cloud)
       if segmentationResult and segmentationResult.meanOfEachCluster:nElement() > 0 then
 
@@ -321,7 +325,7 @@ function main()
       -- The duplo detection itself is very primitive
       for i = 1, segmentationResult.meanOfEachCluster:size()[1] do
         local point = segmentationResult.meanOfEachCluster[{i, {1,3}}]
-        if (point[3] < upper_z_normal_brick + 0.02 and point[3] > upper_z_normal_brick - 0.02) then --we only take care of objects that are close to the expected brick z position
+        if (point[3] < upper_z_normal_brick + 0.02 and point[3] > upper_z_normal_brick - 0.02) then --typically center of a duplo is below the table
           scanPosition = point
           break
         end
@@ -336,6 +340,7 @@ function main()
         while duploPose == nil and counter< 5 do
           duploPose=ScanDuplo(scanPosition,  upper_z_normal_brick * 1000.0)
           counter = counter+1
+          print("counter: "..counter)
         end
       end
 
@@ -373,7 +378,7 @@ function main()
         local p2 = ros.tf.Transform()
         p2:fromTensor(posePlace)
         if not move_to_cart(p2) then return false end
-        --if not roboControl:MoveRobotTo(posePlace) then return false end
+        if not roboControl:MoveRobotTo(posePlace) then return false end
         gripperControl:SetMoveSpeed(20)
         gripperControl:OpenGripper()
         sys.sleep(1.0)
