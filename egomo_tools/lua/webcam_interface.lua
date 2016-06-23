@@ -195,6 +195,7 @@ function WebcamInterface:GrabJPEGstreamROS ()
       imgColSwap[{1, {}, {}}] = imgDecomp[{3, {}, {}}]  -- swap red and blue channel 
       imgColSwap[{3, {}, {}}] = imgDecomp[{1, {}, {}}]
       img=imgColSwap:permute(2,3,1):clone()
+      img = (img*255):type('torch.ByteTensor')
       -- TODO: convert from RGB to BGR for openCV
    end
    return img

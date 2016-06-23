@@ -113,7 +113,7 @@ function GripperInterface:SentGripperMessage (name, value)
   -- send the message
   local msgGripper = self.serviceGripperCtl:call(m)
   if msgGripper == nil then
-    print("Command failed")
+    --print("Command failed")
     return nil
   end
 

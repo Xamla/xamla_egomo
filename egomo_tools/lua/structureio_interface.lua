@@ -164,7 +164,7 @@ function StructureIOInterface:GrabDepthImageViaROS ()
 local timer = torch.Timer()
   local msgDepthCam=self.serviceGetNewImg:call(5) -- set a message to the given service, in this case just an integer 1 to request a new image
   timer:stop()
-  print(string.format("Grabbing depth image took %.1f ms", timer:time().real*1000))
+  --print(string.format("Grabbing depth image took %.1f ms", timer:time().real*1000))
 
   timer:reset()
   timer:resume()
@@ -177,9 +177,10 @@ local timer = torch.Timer()
     imageDepth = imageDepth:type('torch.FloatTensor')
     imageDepth:mul(1.0/1000) -- convert from mm to meter
     timer:stop()
-    print(string.format("Scaling depth image took %.1f ms", timer:time().real*1000))
+    --print(string.format("Scaling depth image took %.1f ms", timer:time().real*1000))
     return imageDepth
   else
+    print("Grabbing depth image failed!")
     return nil
   end
 end
@@ -253,12 +254,12 @@ function StructureIOInterface:GrabPointCloud ()
 local timer = torch.Timer()
    local depthImg = self:GrabDepthImageViaROS()
     timer:stop()
-    print(string.format("Total time depth image %.1f ms", timer:time().real*1000))
+    --print(string.format("Total time depth image %.1f ms", timer:time().real*1000))
     timer:reset()
     timer:resume()
    local cloud=self:BuildCloudVersB(depthImg)
    timer:stop()
-    print(string.format("Converting depth to cloud: %.1f ms", timer:time().real*1000))
+    --print(string.format("Converting depth to cloud: %.1f ms", timer:time().real*1000))
    return cloud
 end
 
