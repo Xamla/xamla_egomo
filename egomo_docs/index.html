@@ -1,0 +1,869 @@
+
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Egomo sensor head assembly</title>
+        <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon-precomposed" href="images/apple-touch-icon.png">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/2.26.3/css/uikit.gradient.min.css">
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/2.26.3/js/uikit.min.js"></script>
+    </head>
+
+    <body>
+
+      <div class="uk-container uk-container-center uk-margin-top uk-margin-large-bottom">
+		
+	<div class="uk-grid" data-uk-grid-margin>
+
+          <div class="uk-width-1-1">
+            <h1 class="uk-heading-large">Egomo sensor head assembly</h1>
+	  </div>
+
+          <div class="uk-width-1-1">
+            <h1 class="uk-heading-medium">Contents:</h1>
+            <h2 class="uk-heading-medium">Standard Assembly:</h2>
+	    <a href="#Removal of old wrist joint cap and assembly of new one.">Removal of old wrist joint cap and assembly of new one.</a> <br> 
+	    <a href="#Dismantling of the Logitech camera.">Dismantling of the Logitech camera.</a> <br> 
+	    <a href="#Attachment of laser, Structure IO and Logitech camera to the base board.">Attachment of laser, Structure IO and Logitech camera to the base board.</a> <br> 
+	    <a href="#Attachment of the Raspberry Pi 3 to the base board.">Attachment of the Raspberry Pi 3 to the base board.</a> <br> 
+	    <a href="#Attachment of FT sensor, gripper and base board to the UR5.">Attachment of FT sensor, gripper and base board to the UR5.</a> <br> 
+	    <h2 class="uk-heading-medium">Alternatives:</h2> 
+	    <a href="#Alternative 1: Preparation of the Logitech camera for front connection with the base board.">Alternative 1: Preparation of the Logitech camera for front connection with the base board.</a> <br> 
+	    <a href="#Alternative 2: Rotated attachment of FT sensor and gripper to the UR5.">Alternative 2: Rotated attachment of FT sensor and gripper to the UR5.</a> <br> 
+
+          </div>
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Removal of old wrist joint cap and assembly of new one." class="uk-heading-medium">Removal of old wrist joint cap and assembly of new one.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-2">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03083.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Turn off power!</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-2">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03075.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take a screwdriver of type and size: T 10 x 40.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03077.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Loose the screws of the original cap.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03078.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Remove the original cap.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03080.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take the rubber seal from this cap</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03082.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">and attach it to the new Xamla cap.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03084.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Carefully pull out the 48V power supply of the robot from its slot on the wrist joint</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03085.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... so that the power supply is interrupted</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03086.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and the slot is free.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03087.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Plug the 48V power supply of the robot in the Y-connector, which is connected to the spiral cable that runs through the new cap.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03089.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Put the other side of the Y-connector into the empty slot on the wrist joint.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03093.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Place the new cap on the wrist joint.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03097.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take two small screws and one longer screw to screw the cap.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03098.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Place the longer screw into the hole above the Xamla logo and the other two screws in the holes besides it.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03099.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now the cap exchange is finished.</figcaption>
+	    </figure>
+	  </div>
+
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Dismantling of the Logitech camera." class="uk-heading-medium">Dismantling of the Logitech camera.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-2">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03100.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Logitech C920 HD Camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-2">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03107.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take a screwdriver of type and size: PH 0-3 x 40.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03101.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Upack the Logitech camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03103.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Remove left and right upper protective cover</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03104.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">.. to get to the screws that attach the front casing.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03108.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Loose the screws of the front casing.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03112.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Remove the front casing</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03115.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... to get to the next inner layer.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03116.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Loose the scews of the inner front casing.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03117.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Remove the inner front casing.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03118.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Loose the screws of the lower mount.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03119.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Grab the lower mount</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03121.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">and pull it out of the camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3 uk-container-center">
+            Now the Logitech camera preparation is finished.
+	  </div>
+
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Attachment of laser, Structure IO and Logitech camera to the base board." class="uk-heading-medium">Attachment of laser, Structure IO and Logitech camera to the base board.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03141.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take the triplet of laser, diode mounts and plug.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03144.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Unscrew the Logitech camera (as described above) and attach the diode mounts for <b>side</b> connection.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03145.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Reattach and screw the inner casing to the camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03146.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Also reattach and screw the outer casing to the camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03147.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now take the laser and attach the laser mount for base board connection</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03151.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... such that it looks like this.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03152.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">During the next steps you'll need four screws.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03154.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Screw the laser mount.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03157.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Attach the laser to the base board 'ring'.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03159.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Screw the laser to the base board 'ring'.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03163.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Afterwards your construction looks like this.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03174.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Here you see the base board mount for the Structure IO.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03165.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now place the Structure IO under the laser and attach it to its base board mount.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03166.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take the imaged four screws</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03167.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and screw the Structure IO.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03169.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now place the Logitech camera above the Structure IO, so that the camera mounts are on their counterparts at the base board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03170.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take these four screws</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03171.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and screw the Logitech camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03183.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now the attachment of laser, Structure IO and Logitech camera to the base board is finished.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-2 uk-container-center">
+            Note: The base board design (specifically the front bracket opposite the laser) slightly differs between the  photos in this section. However, this is irrelevant for the assembly described here and should therefore be ignored please.
+	  </div>
+
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Attachment of the Raspberry Pi 3 to the base board." class="uk-heading-medium">Attachment of the Raspberry Pi 3 to the base board.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03184.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take four screws.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03185.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... to screw the PRi mount to the base board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03191.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Redrill the holes for the RPi attachment.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03186.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Attach the RPi to its mount</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03187.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... such that it looks like this.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03189.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take four screws and four washers</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03190.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... to screw the RPi.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03194.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Afterwards the base board with attached PRi looks like this.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03195.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now take the fan which is connected to the I/O board</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03196.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and place it in its bracket</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03197.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... so that it looks like this.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03198.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take four screws</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03200.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... to screw the fan to its bracket.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03048.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take the I/O board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03046.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Screw it to the fan bracket.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03045.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-2 uk-container-center">
+            Note: The attachment of the fan slightly changed by now. If you have difficulties with the new attachment, please contact us.
+	  </div>
+
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Attachment of FT sensor, gripper and base board to the UR5." class="uk-heading-medium">Attachment of FT sensor, gripper and base board to the UR5.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03071.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take the Robotiq force torque (FT) sensor.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03202.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Also take the sprial power cable that comes out of the new wrist joint cap</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03203.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and thread the cable through the side holes of the FT sensor.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03204.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Note the direction, in which the cable is passed through the FT sensor.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03206.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">As a result the cable is now on the opposite side of the FT sensor.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3 uk-container-center">
+            Note: With the standard attachment direction of FT sensor and gripper to the flansh, the spiral power cable has to be brought to the opposite side of the FT sensor to correctly attach the cable to the Egomo sensor head. In order to prevent the cable to become unnecessarily long, it is threaded through the side holes of the FT sensor.
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03207.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now attach the FT sensor to the flansh of the UR5 (standard attachment direction as described by the manufacturer).</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03208.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Next place the imaged plate on the FT sensor</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03209.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and screw it.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-4">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-DSC03212.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">After that attach the gripper (with the shortened cables) to the FT sensor as described by the manufacturer.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03214.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Run the loose end of the spiral cable through the imaged hole of the base board</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03215.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... such that it comes out at the top of the base board. (In this image the RPi and IO board are already covered in the Xamla Egomo casing. However, the casing has to be unscrewed  only a few steps later to attach the spriral power cable to the IO board.)</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03217.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take three screws to screw the base board with the sensor head components to the flansh.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03218.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Here the placement of the first screw is shown.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03222.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">This is the placement of the second screw.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03223.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">And finally the placement of the third screw is imaged.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03227.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Open the Egomo casing and screw the loose end of the spiral power cable to the corresponding plug at the IO board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03228.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Different view.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03229.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Reattach the IO board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03231.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take four screws</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03232.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... to screw the Xamla Egomo casing to the IO board mount.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03235.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Plug the shortened cables of force torque sensor and gripper into the plugs on the IO board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03236.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Take the visualized shortened cables and connect them with the Egomo components as shown within the next images.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_182819.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption">The Egomo case contains holders for cable ties.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_182846.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption">Use these holders to fix the cables tightly to the Egomo case.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_182855.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_183158.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_183518.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_183529.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_183627.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_183718.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-rotated-IMG_20160613_183912.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_183902.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_184021.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_184001.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-IMG_20160613_184030.jpg" alt="">
+              <figcaption class="uk-thumbnail-caption"></figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3 uk-container-center">
+            Note: With this Xamla Egomo sensor head attachment the UR5 arm can move relatively freely. Especially wrist 3 can rotate completely free.
+	  </div>
+
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Alternative 1: Preparation of the Logitech camera for front connection with the base board." class="uk-heading-medium">Alternative 1: Preparation of the Logitech camera for front connection with the base board.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03124.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Unscrew the Logitech camera (as described in the 'dismantling section') and attach the mounts for <b>front</b> connection.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03126.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">First attach one mount ...</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03127.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... and then the other one ...</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03128.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... so that later the camera can be connected to the <b>front</b> of the base board.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03130.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Tighten the new mounts with screws</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03132.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">... such that the camera looks like this.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03134.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Place the inner front casing back on the camera.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03135.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Tighten it with screws.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03136.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Attach the outer casing back on the camera and tighten it with screws.</figcaption>
+	    </figure>
+	  </div>
+
+	  <div class="uk-width-medium-1-3">
+	    <figure class="uk-thumbnail uk-thumbnail-expand">
+              <img src="Egomo_Installation/small-DSC03138.JPG" alt="">
+              <figcaption class="uk-thumbnail-caption">Now the Logitech camera preparation for <b>front</b> connection with the base board is finished.</figcaption>
+	    </figure>
+	  </div>
+
+
+
+	  <div class="uk-width-1-1">
+	    <h1 id="Alternative 2: Rotated attachment of FT sensor and gripper to the UR5." class="uk-heading-medium">Alternative 2: Rotated attachment of FT sensor and gripper to the UR5.</h1>
+	  </div>
+
+	  <div class="uk-width-medium-1-1 uk-container-center">
+            If the force torque (FT) sensor and gripper are attached to the UR5 in a 180 degree rotated way, you do not have to run the spiral cable through the FT sensor, to get it on the opposite side. This has the advantage, that the spiral cable might be equipped with a plug at its end, so that it can simply be plugged into the Egomo casing. Thus, unscrewing of the Egomo casing and screwing of the spiral cable into a plug at the IO board will not be necessary any more. However, a disadvantage of the rotated attachment is that the axis labels printed on the FT sensor are no longer valid and that some files like the unified robot description format (URDF) might have to be adapted to the rotated attachment.
+	  </div>
+
+
+        </div>
+
+      </div>
+      
+    </body>
+
+</html>
+
