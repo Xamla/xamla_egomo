@@ -41,8 +41,8 @@ end
 
 function StructureIOInterface:Connect()
    local nodehandle = ros.NodeHandle()
-   self.serviceGetNewImg = nodehandle:serviceClient("/"..self.nodeID.."/get_new_image", "openni2_cam/GetNewImage")
-   self.serviceSetResolution = nodehandle:serviceClient("/"..self.nodeID.."/set_parameters", "openni2_cam/SetParameters")
+   self.serviceGetNewImg = nodehandle:serviceClient("/"..self.nodeID.."/get_new_image", "egomo_depthcam/GetNewImage")
+   self.serviceSetResolution = nodehandle:serviceClient("/"..self.nodeID.."/set_parameters", "egomo_depthcam/SetParameters")
 end
 
 

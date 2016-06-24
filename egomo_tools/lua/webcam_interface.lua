@@ -61,7 +61,7 @@ end
 function WebcamInterface:ConnectToSingleImage ()
    local nodehandle = ros.NodeHandle() -- generic node handle
    print(self.nodeID)
-   self.serviceGetNewImg = nodehandle:serviceClient("/"..self.nodeID.."/get_new_image", "web_cam/GetNewImage")
+   self.serviceGetNewImg = nodehandle:serviceClient("/"..self.nodeID.."/get_new_image", "egomo_webcam/GetNewImage")
    if (self.serviceGetNewImg == nil) then
       print(string.format("Service %s/get_new_image not found", self.nodeID))
       return false
@@ -76,7 +76,7 @@ end
 -- @return false if the focus service is not found otherwise true
 function WebcamInterface:ConnectToServiceFocus ()
    local nodehandle = ros.NodeHandle() -- generic node handle
-   self.serviceSetFocus = nodehandle:serviceClient("/"..self.nodeID.."/set_focus", "web_cam/SetCameraFocus")
+   self.serviceSetFocus = nodehandle:serviceClient("/"..self.nodeID.."/set_focus", "egomo_webcam/SetCameraFocus")
    if (self.serviceSetFocus == nil) then
       print(string.format("Service %s/set_focus not found", self.nodeID))
       return false
