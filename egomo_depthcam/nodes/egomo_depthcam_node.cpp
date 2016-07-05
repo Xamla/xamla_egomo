@@ -200,6 +200,8 @@ bool OpenNI2CamNode::RecordSendImage(egomo_depthcam::GetNewImageRequest& req, eg
   imgData = device.GetSingleImage(imgType);
   clock_gettime(CLOCK_MONOTONIC, &timeEnd);
   // std::cout<< "Overall img capture time: " << device.CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
+  if(imgData==NULL)  // some error occured and we don't have a valid image
+    return false;
 
   res.img.header.stamp = ros::Time::now();
   res.img.header.seq = seqNum;
