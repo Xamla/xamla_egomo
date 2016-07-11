@@ -31,6 +31,7 @@ namespace egomo_webcam {
     bool UpdateStreamImage();
     void AdvertiseService();
     void ConnectCb();
+    void ConnectCbRaw();
 
     // private ROS node handle
     ros::NodeHandle nodeHandle;
@@ -39,15 +40,19 @@ namespace egomo_webcam {
     ros::ServiceServer serverGetNewImage;
     ros::ServiceServer serverSetCameraFocus;
     ros::Publisher serverImgStream;
+    ros::Publisher serverImgStreamRaw;
 
     unsigned long seqNum;
     unsigned long seqNumStream;
+    unsigned long seqNumStreamRaw;
 
     WebCam camDriver;
 
     int frameRate;
     sensor_msgs::CompressedImage streamImg;
+    sensor_msgs::Image streamImgRaw;
     boost::mutex connectionMutex;
     int nSubscribers;
+    int nSubscribersRaw;
   };
 }

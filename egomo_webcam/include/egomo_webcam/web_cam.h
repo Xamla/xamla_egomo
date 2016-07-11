@@ -67,10 +67,12 @@ namespace egomo_webcam {
     int StartDevice(std::string devName);
     void StopDevice();
     void SetImageFormatStream(ImageData::ImgFormatType type, int width, int height);
+    void SetImageFormatStreamRaw(ImageData::ImgFormatType type, int width, int height);
     void SetImageFormatStill(ImageData::ImgFormatType type, int width, int height);
 
     const ImageData *GetStillImage();
     const ImageData *GetStreamImage();
+    const ImageData *GetStreamImageRaw();
     ImageData GetCurrImgSettings();
 
     int AutoFocusImage();
@@ -83,7 +85,7 @@ namespace egomo_webcam {
     std::vector<std::string> GetErrorMessages() {return errorMsgArray;};
     void ResetErrorMessageArray() {errorMsgArray.clear();};
 
-    double CalcTimeDiff(timespec start, timespec end);
+    static const double CalcTimeDiff(timespec start, timespec end);
 
   private:
     std::string fDevName;
@@ -95,6 +97,10 @@ namespace egomo_webcam {
     int imgWidthStream;
     int imgHeightStream;
     ImageData::ImgFormatType imgFormatStream;
+
+    int imgWidthStreamRaw;
+    int imgHeightStreamRaw;
+    ImageData::ImgFormatType imgFormatStreamRaw;
 
     int imgWidthStill;
     int imgHeightStill;

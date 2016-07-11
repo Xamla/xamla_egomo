@@ -41,6 +41,9 @@ namespace egomo_webcam {
     imgWidthStill(640),
     imgHeightStill(480),
     imgFormatStill(ImageData::YUYV),
+    imgWidthStreamRaw(640),
+    imgHeightStreamRaw(480),
+    imgFormatStreamRaw(ImageData::YUYV),
     io(IO_METHOD_MMAP),
     fd(-1),
     buffers(NULL),
@@ -111,6 +114,12 @@ namespace egomo_webcam {
     imgHeightStream = height;
   }
 
+  void WebCam::SetImageFormatStreamRaw(ImageData::ImgFormatType type, int width, int height)
+  {
+    imgFormatStreamRaw = type;
+    imgWidthStreamRaw = width;
+    imgHeightStreamRaw = height;
+  }
 
   void WebCam::SetImageFormatStill(ImageData::ImgFormatType type, int width, int height)
   {
@@ -147,6 +156,33 @@ namespace egomo_webcam {
    return &imgData;
   }
 
+
+  const ImageData *WebCam::GetStreamImageRaw()
+  {
+    // if(StartDevice(devName, width, height)!=0)
+    //   return NULL;
+
+   if(deviceInitialized==false) {
+      errorMsgStream << "Device " << fDevName << " is not initialized." << std::endl;
+      errorMsgArray.push_back(errorMsgStream.str());
+      errorMsgStream.str("");
+      return NULL;
+    }
+
+   if(imgWidthCurr != imgWidthStreamRaw || imgHeightCurr != imgHeightStreamRaw || imgFormatCurr != imgFormatStreamRaw)
+     SwitchImageFormat(imgFormatStreamRaw, imgWidthStreamRaw, imgHeightStreamRaw);
+
+   start_capturing();
+   if(grab_image()!=0)
+     return NULL;
+
+   // If the requested image size is not supported by the camera, an image with closesed supported resolution is recorded.
+   // We update the settings to reflect that resolution change
+   imgWidthStreamRaw = imgData.width;
+   imgHeightStreamRaw = imgData.height;
+
+   return &imgData;
+  }
 
 
   const ImageData *WebCam::GetStillImage()
@@ -1060,7 +1096,7 @@ int WebCam::process_image(const void * src, int len)
 }
 
 
-double WebCam::CalcTimeDiff(timespec start, timespec end)
+const double WebCam::CalcTimeDiff(timespec start, timespec end)
 {
 	timespec temp;
 	if ((end.tv_nsec-start.tv_nsec)<0) {
