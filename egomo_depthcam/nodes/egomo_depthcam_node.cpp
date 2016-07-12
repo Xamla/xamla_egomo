@@ -16,7 +16,7 @@
 
 #include <OpenNI.h>
 
-#include "egomo_depthcam/LZ4compressedImg.h"
+#include "egomo_depthcam/DepthImage.h"
 #include "egomo_depthcam/GetNewImage.h"
 #include "egomo_depthcam/SetParameters.h"
 #include "egomo_depthcam_node.h"
@@ -42,7 +42,8 @@ OpenNI2CamNode::OpenNI2CamNode() :
 		 bitReorderBuffer(NULL),
 		 bitReorderBufferSize(0),
 		 lz4ResultBuffer(NULL),
-		 lz4ResultBufferSize(0)
+		 lz4ResultBufferSize(0),
+                 useLZ4compression(false)
 {
   clock_gettime(CLOCK_MONOTONIC, &nodeStartTime);
 
@@ -65,6 +66,7 @@ OpenNI2CamNode::OpenNI2CamNode() :
   nodeHandle.param("irimage_width_stream", irWidthStream, 640);
   nodeHandle.param("irimage_height_stream", irHeightStream, 480);
   nodeHandle.param("frame_rate", frameRate, 30);
+  nodeHandle.param("use_lz4compress", useLZ4compression, false);
 
   device.SetResolution(OpenNI2Device::kDepthStill, depthWidthStill, depthHeightStill);
   device.SetResolution(OpenNI2Device::kDepthStream, depthWidthStream, depthHeightStream);
@@ -93,7 +95,7 @@ void OpenNI2CamNode::AdvertiseService()
 
   boost::lock_guard<boost::mutex> lock(connectionMutex);
   ros::SubscriberStatusCallback subscriberCb = boost::bind(&OpenNI2CamNode::ConnectDepthCb, this);
-  serverDepthStream = nodeHandle.advertise<egomo_depthcam::LZ4compressedImg>("depth/stream_compressed", 1, subscriberCb, subscriberCb);
+  serverDepthStream = nodeHandle.advertise<egomo_depthcam::DepthImage>("depthstream/image", 1, subscriberCb, subscriberCb);
   device.RegisterDepthFrameCallback(boost::bind(&OpenNI2CamNode::NewDepthImgCallback, this, _1, _2));
 }
 
@@ -127,34 +129,44 @@ bool OpenNI2CamNode::NewDepthImgCallback(openni::VideoFrameRef &currFrame, struc
   depthStreamImg.step=currFrame.getStrideInBytes();
   depthStreamImg.data_size_uncompressed = currFrame.getDataSize();
 
-  if(bitReorderBufferSize != currFrame.getDataSize()) {
-    //std::cout << "Realloc bit reorder buffer size" << std::endl;
-    delete[] bitReorderBuffer;
-    delete[] lz4ResultBuffer;
+  if(useLZ4compression) {
+    if(bitReorderBufferSize != currFrame.getDataSize()) {
+      //std::cout << "Realloc bit reorder buffer size" << std::endl;
+      delete[] bitReorderBuffer;
+      delete[] lz4ResultBuffer;
 
-    bitReorderBufferSize=currFrame.getDataSize();
-    bitReorderBuffer = new char[bitReorderBufferSize];
+      bitReorderBufferSize=currFrame.getDataSize();
+      bitReorderBuffer = new char[bitReorderBufferSize];
 
-    lz4ResultBufferSize = bitReorderBufferSize + 0.1*bitReorderBufferSize;  // add some reserve in case of incompressible data
-    lz4ResultBuffer = new char[bitReorderBufferSize];
+      lz4ResultBufferSize = bitReorderBufferSize + 0.1*bitReorderBufferSize;  // add some reserve in case of incompressible data
+      lz4ResultBuffer = new char[bitReorderBufferSize];
 
-    //std::cout << "New sizes: bitReorderBufferSize=" << bitReorderBufferSize << ", lz4ResultBufferSize=" << lz4ResultBufferSize << std::endl;
+      //std::cout << "New sizes: bitReorderBufferSize=" << bitReorderBufferSize << ", lz4ResultBufferSize=" << lz4ResultBufferSize << std::endl;
+    }
+
+
+    timespec timeStart, timeEnd;  // debug: time the main compression routine
+    clock_gettime(CLOCK_MONOTONIC, &timeStart);
+    ReorderBits((char*)currFrame.getData(), currFrame.getDataSize(), bitReorderBuffer, bitReorderBufferSize);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    // std::cout<< "Bit reorder time: " << device.CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
+
+    clock_gettime(CLOCK_MONOTONIC, &timeStart);
+    depthStreamImg.data_size=CompressLZ4(bitReorderBuffer,  depthStreamImg.data_size_uncompressed, lz4ResultBuffer);
+    clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    // std::cout<< "LZ4 compression time: " << device.CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
+
+    depthStreamImg.data.resize(depthStreamImg.data_size);
+    memcpy(&depthStreamImg.data[0], lz4ResultBuffer, depthStreamImg.data_size);
+    depthStreamImg.compressionType="lz4";
   }
+  else {
+    depthStreamImg.data_size = depthStreamImg.data_size_uncompressed;
+    depthStreamImg.data.resize(depthStreamImg.data_size);
+    memcpy(&depthStreamImg.data[0], (char*)currFrame.getData(), currFrame.getDataSize());
 
-
-  timespec timeStart, timeEnd;  // debug: time the main compression routine
-  clock_gettime(CLOCK_MONOTONIC, &timeStart);
-  ReorderBits((char*)currFrame.getData(), currFrame.getDataSize(), bitReorderBuffer, bitReorderBufferSize);
-  clock_gettime(CLOCK_MONOTONIC, &timeEnd);
-  // std::cout<< "Bit reorder time: " << device.CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
-
-  clock_gettime(CLOCK_MONOTONIC, &timeStart);
-  depthStreamImg.data_size=CompressLZ4(bitReorderBuffer,  depthStreamImg.data_size_uncompressed, lz4ResultBuffer);
-  clock_gettime(CLOCK_MONOTONIC, &timeEnd);
-  // std::cout<< "LZ4 compression time: " << device.CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
-
-  depthStreamImg.data.resize(depthStreamImg.data_size);
-  memcpy(&depthStreamImg.data[0], lz4ResultBuffer, depthStreamImg.data_size);
+    depthStreamImg.compressionType="none";
+  }
 
   struct timeval tp;
   gettimeofday(&tp, NULL);

@@ -49,7 +49,7 @@ add_service_files(
 
 add_message_files(
   FILES
-  LZ4compressedImg.msg
+  DepthImage.msg
 )
 
 generate_messages(

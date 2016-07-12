@@ -1,6 +1,6 @@
 <launch>
   <node name="egomo_depthcam" pkg="egomo_depthcam" type="egomo_depthcam_node" output="screen">
     <!-- set frame rate of the depth stream -->
-      <param name="frame_rate" value="10" />
+      <param name="frame_rate" value="30" />
   </node>
 </launch>

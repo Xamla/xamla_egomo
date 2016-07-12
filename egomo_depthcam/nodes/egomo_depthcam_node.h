@@ -6,7 +6,7 @@
 
 #include <boost/thread/thread.hpp>
 
-#include "egomo_depthcam/LZ4compressedImg.h"
+#include "egomo_depthcam/DepthImage.h"
 #include "egomo_depthcam/GetNewImage.h"
 #include "egomo_depthcam/SetParameters.h"
 #include "egomo_depthcam/openni2_device.h"
@@ -55,7 +55,7 @@ class OpenNI2CamNode
   ros::ServiceServer serverSetParameters;
 
   ros::Publisher serverDepthStream;
-  egomo_depthcam::LZ4compressedImg depthStreamImg;
+  egomo_depthcam::DepthImage depthStreamImg;
 
   unsigned long seqNum;
   unsigned long depthStreamSeqNum;
@@ -67,6 +67,8 @@ class OpenNI2CamNode
   int callbackCounter;
 
   OpenNI2Device device;
+
+  bool useLZ4compression;
 
   char *bitReorderBuffer;
   int bitReorderBufferSize;
