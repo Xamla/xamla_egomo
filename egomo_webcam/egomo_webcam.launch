@@ -6,5 +6,7 @@
       <param name="image_height_still" value="720" />
       <param name="image_width_stream" value="320" />
       <param name="image_height_stream" value="240" />
+      <param name="image_width_stream_raw" value="960" />
+      <param name="image_height_stream_raw" value="720" />
   </node>
 </launch>

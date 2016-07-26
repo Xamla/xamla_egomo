@@ -29,25 +29,34 @@ WebCamNode::WebCamNode() :
 	     reconfigServerHandle("~"),
 	     nodeHandle("~"),
 	     seqNum(0),
-	     nSubscribers(0)
+             seqNumStream(0),
+             seqNumStreamRaw(0),
+	     nSubscribers(0),
+             nSubscribersRaw(0)
 {
   std::string deviceName;
   int image_width_still;
   int image_height_still;
   int image_width_stream;
   int image_height_stream;
+  int image_width_stream_raw;
+  int image_height_stream_raw;
 
   nodeHandle.param("video_device", deviceName, std::string("/dev/video0"));
   nodeHandle.param("image_width_still", image_width_still, 960);
   nodeHandle.param("image_height_still", image_height_still, 720);
   nodeHandle.param("image_width_stream", image_width_stream, 320);
   nodeHandle.param("image_height_stream", image_height_stream, 240);
+  nodeHandle.param("image_width_stream_raw", image_width_stream_raw, 320);
+  nodeHandle.param("image_height_stream_raw", image_height_stream_raw, 240);
 
   camDriver.SetImageFormatStill(ImageData::YUYV, image_width_still, image_height_still);
   camDriver.SetImageFormatStream(ImageData::MJPG, image_width_stream, image_height_stream);
+  camDriver.SetImageFormatStreamRaw(ImageData::YUYV, image_width_stream_raw, image_height_stream_raw);
 
   std::cout << "starting device " << deviceName << " with img res. " << image_width_still << "x" << image_height_still
-	    << " and stream res. " << image_width_stream << "x" << image_height_stream << std::endl;
+	    << " and stream res. " << image_width_stream << "x" << image_height_stream
+	    << " and stream raw res. " << image_width_stream_raw << "x" << image_height_stream_raw << std::endl;
 
   if(camDriver.StartDevice(deviceName) != 0) {
     std::vector<std::string> errorMsgs=camDriver.GetErrorMessages();
@@ -75,9 +84,11 @@ void WebCamNode::AdvertiseService()
   // Halt connection callbacks until all publishers are set up
   boost::lock_guard<boost::mutex> lock(connectionMutex);
   ros::SubscriberStatusCallback subscriberCb = boost::bind(&WebCamNode::ConnectCb, this);
+  ros::SubscriberStatusCallback subscriberCbRaw = boost::bind(&WebCamNode::ConnectCbRaw, this);
 
   // calls subscriberCb both for connect and disconnect events
   serverImgStream = nodeHandle.advertise<sensor_msgs::CompressedImage>("stream/compressed", 2, subscriberCb, subscriberCb);
+  serverImgStreamRaw = nodeHandle.advertise<sensor_msgs::Image>("stream/raw", 2, subscriberCbRaw, subscriberCbRaw);
 }
 
 
@@ -85,6 +96,15 @@ void WebCamNode::ConnectCb()
 {
   boost::lock_guard<boost::mutex> lock(connectionMutex);
   nSubscribers = serverImgStream.getNumSubscribers(); // update the number of connected clients
+  //std::cout << "number of connected clients: " << nSubscribers << std::endl;
+
+  // optional: do something if someone connects or nSubscribers==0 (=noone connected)
+}
+
+void WebCamNode::ConnectCbRaw()
+{
+  boost::lock_guard<boost::mutex> lock(connectionMutex);
+  nSubscribersRaw = serverImgStreamRaw.getNumSubscribers(); // update the number of connected clients
   //std::cout << "number of connected clients: " << nSubscribers << std::endl;
 
   // optional: do something if someone connects or nSubscribers==0 (=noone connected)
@@ -102,6 +122,9 @@ bool WebCamNode::SetCameraFocus(egomo_webcam::SetCameraFocusRequest &req, egomo_
     for (unsigned i=0; i<errorMsgs.size(); i++)
       ROS_WARN("%s", errorMsgs[i].c_str());
     return false;
+  }
+  else {
+    std::cout << "Webcam manual focus set to " << focus << " (autofocus: " << autofocus << ")" << std::endl;
   }
 
   res.result = result;
@@ -129,6 +152,7 @@ bool WebCamNode::RecordSendImage(egomo_webcam::GetNewImageRequest& req, egomo_we
     return false;
   }
 
+  std::cout << "Single Img Capture" << std::endl;
   res.img.header.seq = seqNum;
   seqNum++;
   res.img.header.frame_id = "";  // TODO: lookup the required value
@@ -152,7 +176,12 @@ bool WebCamNode::RecordSendImage(egomo_webcam::GetNewImageRequest& req, egomo_we
 bool WebCamNode::UpdateStreamImage()
 {
   if(nSubscribers>0) {  // update image only if there are any subscribers
+    timespec timeStart, timeEnd;
+
+    //clock_gettime(CLOCK_MONOTONIC, &timeStart);
     streamImg.header.stamp = ros::Time::now();
+    //std::cout << "Seq. number JPEG stream: " << seqNumStream << std::endl;
+    //std::cout << "Timestamp header JPEG stream" << streamImg.header.stamp << std::endl;
 
     const ImageData *imgData=camDriver.GetStreamImage();
 
@@ -173,10 +202,51 @@ bool WebCamNode::UpdateStreamImage()
     memcpy(&streamImg.data[0], imgData->data, st0);
 
     serverImgStream.publish(streamImg);
+    //clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    //std::cout<< "Time grab+send image total: " << egomo_webcam::WebCam::CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
+  }
+
+
+  if(nSubscribersRaw>0) {  // update image only if there are any subscribers
+    timespec timeStart, timeEnd;
+
+    //clock_gettime(CLOCK_MONOTONIC, &timeStart);
+    streamImgRaw.header.stamp = ros::Time::now();
+    //std::cout << "Seq. number RAW stream: " << seqNumStreamRaw << std::endl;
+    //std::cout << "Timestamp header RAW stream " << streamImgRaw.header.stamp << std::endl;
+
+    const ImageData *imgData=camDriver.GetStreamImageRaw();
+
+    if(imgData==NULL) {
+      std::vector<std::string> errorMsgs=camDriver.GetErrorMessages();
+      for (unsigned i=0; i<errorMsgs.size(); i++)
+	ROS_WARN("%s", errorMsgs[i].c_str());
+      return false;
+    }
+
+    streamImgRaw.header.seq = seqNumStreamRaw;
+    seqNumStreamRaw++;
+    streamImgRaw.header.frame_id = "";  // TODO: lookup the required value
+
+    streamImgRaw.height = imgData->height;
+    streamImgRaw.width = imgData->width;
+    streamImgRaw.encoding = "yuyv422";
+    streamImgRaw.is_bigendian=false;
+    streamImgRaw.step=imgData->width*2;
+
+    size_t st0 = (imgData->imgSizeInByte);
+    streamImgRaw.data.resize(st0);
+    memcpy(&streamImgRaw.data[0], imgData->data, st0);
+
+    serverImgStreamRaw.publish(streamImgRaw);
+    //clock_gettime(CLOCK_MONOTONIC, &timeEnd);
+    //std::cout<< "Time grab+send raw image total: " << egomo_webcam::WebCam::CalcTimeDiff(timeStart, timeEnd) << " ms" << std::endl;
   }
 
   return true;
 }
+
+
 
 
 bool WebCamNode::Spin()
@@ -221,7 +291,7 @@ void WebCamNode::TryReconnect()
 int main(int argc, char **argv) {
   ros::init(argc, argv, "webcam");
   egomo_webcam::WebCamNode a;
-  a.SetFrameRate(15);
+  a.SetFrameRate(30);
   a.Spin();
   return EXIT_SUCCESS;
 }

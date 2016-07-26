@@ -8,4 +8,5 @@ uint8 is_bigendian
 uint32 step
 uint32 data_size
 uint32 data_size_uncompressed
+string compressionType
 uint8[] data

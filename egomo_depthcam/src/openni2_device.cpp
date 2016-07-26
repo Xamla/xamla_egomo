@@ -49,8 +49,38 @@ const openni::VideoFrameRef *OpenNI2Device::GetSingleImage(ImageType imgType)
 
   switch(imgType) {
   case kIRraw:
-    std::cout << "kIRraw is currently not supported" << std::endl;
-    return NULL;
+    if(currIRFSMstate == kIRinactive)
+      SwitchState(kInitIRdevice);
+    if(currIRFSMstate == kIRconfigured)
+      SwitchState(kStartIRdevice);
+
+    if(currDepthFSMstate == kDepthInactive)
+      SwitchState(kInitDepthDevice);
+    if(currFSMstate == kInitialized && currDepthFSMstate == kDepthConfigured)
+      SwitchState(kStartIRprojector);
+
+    if(currFSMstate == kInitialized && currDepthFSMstate == kDepthConfigured)
+      SwitchState(kStartIRprojector);
+
+    if(currFSMstate == kIRprojectorActive || currDepthFSMstate == kDepthStreaming) {
+      try {
+        SwitchState(kGrabIRSpeckle);
+      }
+      catch (GrabbingTimeoutException &err) {
+        //std::cout << "========================= Depth frame grabbing error, try again ..." << std::endl;
+        SwitchState(kStopIRprojector);  // restart the depth projector with less agressive timing
+        usleep(1000*1000);               // 1 sec
+        SwitchState(kGrabIRnoSpeckle);
+        usleep(500*1000);
+        SwitchState(kStartIRprojector);
+        usleep(100 * 1000);       // 0.1 sec
+        SwitchState(kGrabIRSpeckle); // if frame grabbing fails again, we don't catch the exception again.
+        // Failing again indicates a major problem which has to be handled at higher level.
+      }
+      return &currIRFrame;
+    }
+    else
+      return NULL;
     break;
 
   case kIRrawNoSpeckle:
