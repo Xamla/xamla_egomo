@@ -263,7 +263,8 @@
         <child link="wrist_1_linka" />
         <origin xyz="0.0 0.0 ${ur5_d4}" rpy="0.0 0.0 ${theta_4}" />
         <axis xyz="0 0 -1" />
-        <limit effort="28.0" lower="-3.92" upper="0.78" velocity="3.2" />
+        <!--limit effort="28.0" lower="-3.92" upper="0.78" velocity="3.2" /-->
+        <limit effort="28.0" lower="-${pi}" upper="${pi}" velocity="3.2" />
         <!-- -225 deg to 45 deg -->
         <dynamics damping="0.0" friction="0.0" />
     </joint>
@@ -366,7 +367,7 @@
         <child link="wrist_3_linka" />
         <origin rpy="0.0 0.0 ${theta_6}" xyz="0.0 0.0 ${ur5_d6}" />
         <axis xyz="0 0 -1" />
-        <limit effort="28.0" lower="-${pi}" upper="${pi}" velocity="3.15" />
+        <limit effort="28.0" lower="-${1.277*pi}" upper="${1.277*pi}" velocity="3.15" />
         <dynamics damping="0.0" friction="0.0" />
     </joint>
     <link name="wrist_3_linka">
