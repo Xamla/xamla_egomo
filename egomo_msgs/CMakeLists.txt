@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  trajectory_msgs
   message_generation
   genmsg
   actionlib
@@ -52,12 +53,14 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
 	FILES
 	XamlaGripper.msg
+	tfTrajectory.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
    FILES
    SendCommand.srv
+   LoggerCommand.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -70,7 +73,9 @@ add_action_files(
 generate_messages(
    DEPENDENCIES
    std_msgs  # Or other packages containing msgs
+   geometry_msgs
    actionlib_msgs
+   trajectory_msgs
 )
 
 
