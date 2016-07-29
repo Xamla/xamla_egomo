@@ -12,12 +12,12 @@
     <!-- ==============add tool0 for moveit naming convention=========== -->
     <link name="tool0" />
     <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
-        <origin rpy="0  0 0" xyz="0 0.0 0.0" />
+        <origin rpy="0  0 0" xyz="0 0.0 0.2" />
         <parent link="wrist_3_link" />
         <child link="tool0" />
     </joint>
     <!-- ==============add EGOMO senor component=============== -->
-    <xacro:egomo_sensor prefix="" parent="tool0">
+    <xacro:egomo_sensor prefix="" parent="wrist_3_link">
         <origin xyz="0 0 0.011" rpy="0 0 0" />
     </xacro:egomo_sensor>
 
