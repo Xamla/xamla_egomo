@@ -99,10 +99,17 @@ function StructureIOInterface:GrabIRNoSpeckleViaROS ()
     --imageIRfull=imageIRfull:permute(2,3,1):clone()
 
     local imageIR8bit = imageIRfull:type('torch.FloatTensor')
-    local a=imageIR8bit:max()
-    imageIR8bit:mul(255.0/a)
-    imageIR8bit:clamp(0,255)
-    imageIR8bit = imageIR8bit:type('torch.ByteTensor')
+    local irImgLog = torch.log(torch.mul(imageIRfull:type('torch.FloatTensor'):clone(), 0.1))
+    local m=irImgLog:max()
+    irImgLog:mul(255.0/m)
+    irImgLog:clamp(0,255)
+    imageIR8bit = irImgLog:type('torch.ByteTensor')
+
+
+    --local a=imageIR8bit:max()
+    --imageIR8bit:mul(255.0/a)
+    --imageIR8bit:clamp(0,255)
+    --imageIR8bit = imageIR8bit:type('torch.ByteTensor')
     return imageIR8bit, imageIRfull
   else
     return nil
@@ -187,6 +194,11 @@ end
 
 
 function StructureIOInterface:BuildCloudVersB(depthImg)
+  if self.camIntrinsicsIR == nil then
+    error("Cannot build point cloud from depth image without intrinsic camera matrix")
+    return nil
+  end
+   
   local camIntrinsicsIRinverse = torch.inverse(self.camIntrinsicsIR)
   local xResolution=depthImg:size(2)
   local yResolution=depthImg:size(1)
@@ -221,6 +233,11 @@ end
 
 
 function StructureIOInterface:BuildCloudVersA(depthImg)
+  if self.camIntrinsicsIR == nil then
+    error("Cannot build point cloud from depth image without intrinsic camera matrix")
+    return nil
+  end
+
   local camIntrinsicsIRinverse = torch.inverse(self.camIntrinsicsIR)
   local xResolution=depthImg:size()[2]
   local yResolution=depthImg:size()[1]
