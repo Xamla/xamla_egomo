@@ -7,8 +7,8 @@ local cv = require 'cv'
 require 'cv.highgui'
 require 'cv.imgproc'
 
-local ct = require 'cloud-tools'
-require 'cloud-tools.objects_on_plane_segmentation'
+package.path = "../core/?.lua;" .. package.path
+require 'ObjectsOnPlaneSegmentation'
 
 local egomo_tools = require 'egomo-tools'
 
@@ -16,6 +16,8 @@ local egomo_tools = require 'egomo-tools'
 local ROBOT_SPEED = 1.0
 local GRIPPER_LENGTH = 0.22
 local APPROACH_DISTANCE = 0.08
+
+local VISUALIZE = true
 
 local CAM_INTRINSICS_IR = torch.FloatTensor{
   {584.8203397188, 0, 322.13417604596},
@@ -33,9 +35,7 @@ local OVERVIEW_POSE_Z_DISTANCE = 0.65
 
 local GRIP_POSE_Z_DISTANCE = -0.027
 
-local DROP_POSE_X = 0.55
-local DROP_POSE_Y = 0.05
-local DROP_POSE_Z = 0.35
+local DROP_POSITION = torch.DoubleTensor({0.213, 0.690, 0.470})
 
 local GRIPPER_SPEED = 255
 local GRIPPER_FORCE = 255
@@ -81,6 +81,12 @@ local function initialze()
   gripper_control = egomo_tools.gripper:new()
   gripper_control:Connect()
 
+  sys.sleep(0.2)
+  gripper_control:ResetGripper()
+  gripper_control:OpenGripper()
+  gripper_control:SetGripForce(5)
+
+  --[[
   local gripper_init_result = gripper_control:resetGripperViaAction()
 
   if gripper_init_result == ACTION_SUCCEEDED then
@@ -93,8 +99,40 @@ local function initialze()
   if gripper_init_result == ACTION_SUCCEEDED then
     gripper_control:openGripperViaAction(15, 5, true, GRIPPER_SPEED, GRIPPER_FORCE)
   end
-
+  --]]
   fsm_state = STATE_INIT
+end
+
+--- 
+-- Utility function to translate color IDs to actual color values
+-- @param id color ID
+function getColor(id)
+   local cloudColors = {}
+   cloudColors[1] = { 0.5, 0.7, 1.0} -- lightskyblue
+   cloudColors[2] = {1, 0.843137, 0 } -- gold
+   cloudColors[3] = { 0.133333, 0.545098, 0.133333} -- forrestgreen
+   cloudColors[4] = { 190/255.0, 34/255.0, 34/255.0} -- firebrick
+   cloudColors[5] = { 0.780392, 0.0823529, 0.521569} -- mediumvioletred
+   cloudColors[6] = { 0.980392, 0.921569, 0.843137} -- antiquewhite
+   cloudColors[7] = { 1, 0.7, 0} -- orange
+   cloudColors[8] = { 0, 0, 0.803922} -- mediumblue
+   cloudColors[9] = { 0.729412, 0.333333, 0.827451} -- mediumorchid
+   cloudColors[10] = { 0.956863, 0.643137, 0.376471} --sandybrown
+   cloudColors[11] = {1, 0.54902, 0 } -- darkorange
+
+   cloudColors[12] = { 0, 1, 0.5} -- Spring Green
+   cloudColors[13] = { 0.2, 0.2, 1} -- blue
+   cloudColors[14] = { 160/255.0, 32/255.0, 240/255.0} -- Purple
+   cloudColors[15] = { 230/255.0, 230/255.0, 250/255.0} -- Lavender
+
+   cloudColors[16] = { 0.3, 0.3, 0.3} -- dark gray
+   cloudColors[17] = { 0.86, 0.86, 0.86} -- light gray
+
+   if(id<=17) then
+      return cloudColors[id]
+   else
+      return {1, 1, 1}
+   end
 end
 
 ---
@@ -159,9 +197,7 @@ end
 -- @param orientation 4x4 torch.Tensor the orientation of the TCP when dropping positions
 local function createDropPose(orientation)
   local drop_pose_manual = orientation:clone()
-  drop_pose_manual[1][4] = DROP_POSE_X
-  drop_pose_manual[2][4] = DROP_POSE_Y
-  drop_pose_manual[3][4] = DROP_POSE_Z
+  drop_pose_manual[{{1,3}, {4}}] = DROP_POSITION
   return drop_pose_manual
 end
 
@@ -179,9 +215,13 @@ local function pickObject()
   print(poses.grip)
   robot_control:MoveRobotTo(poses.grip)
 
+  gripper_control:CloseGripper()
+  sys.sleep(0.6) 
+--[[
   while gripper_control:closeGripperViaAction() ~= 7 do
     print("Closing gripper failed. Trying again!")
   end
+--]]
 
   fsm_state = STATE_PICK_DONE
 end
@@ -196,10 +236,13 @@ local function dropObject()
   robot_control:MoveRobotTo(poses.drop)
 
   --drop
+  gripper_control:OpenGripper()
+  sys.sleep(0.1)
+  --[[
   while gripper_control:openGripperViaAction() ~= 7 do
     print("Opening gripper failed. Trying again!")
   end
-
+  --]]
   fsm_state = STATE_DROP_DONE
 end
 
@@ -211,9 +254,9 @@ local function moveToOverview()
   print("moveto overview")
   print(poses.overview)
   local sphere_pose = tf.Transform()
-  sphere_pose:setOrigin({0.2, 0.6, 0.1})
+  sphere_pose:setOrigin({-0.23, 0.35, 0.1})
   sphere_pose:setRotation(tf.Quaternion({1, 0, 0}, math.pi))
-  planning_scene_interface:addSphere('working_area', 0.3, sphere_pose)
+  planning_scene_interface:addSphere('working_area', 0.2, sphere_pose)
   print("Pose Overview:")
   robot_control:MoveRobotTo(poses.overview)
   planning_scene_interface:removeCollisionObjects('working_area')
@@ -235,12 +278,23 @@ end
 local function main(N)
   local timer = torch.Timer()
 
-  poses.overview = robot_control:WebCamLookAt(OVERVIEW_POSE_POINT_TO_LOOK, OVERVIEW_POSE_Z_DISTANCE, math.rad(-45), math.rad(0.5), HAND_EYE)
-
+  --poses.overview = robot_control:WebCamLookAt(OVERVIEW_POSE_POINT_TO_LOOK, OVERVIEW_POSE_Z_DISTANCE, math.rad(-45), math.rad(0.5), HAND_EYE)
+  poses.overview = torch.DoubleTensor{
+     { 0.5165, -0.4161, -0.7484, -0.2357},
+     { 0.5838, -0.4683,  0.6633,  0.3522},
+     {-0.6264, -0.7795,  0.0010,  0.6227},
+     { 0.0000,  0.0000,  0.0000,  1.0000}}
+  
   moveToOverview()
   fsm_state = STATE_OVERVIEW_POSE
 
   local empty_table_timer = torch.Timer()
+
+  local viewer
+  if (VISUALIZE) then
+    viewer = pcl.PCLVisualizer('Viewer', true)
+  end
+
 
   while ros.ok() do
     if(fsm_state == STATE_OVERVIEW_POSE) then
@@ -248,6 +302,39 @@ local function main(N)
       local cloud = depthcam:GrabPointCloud()
       local capture_pose = robot_control:GetPose()
       segmentation:process(cloud)
+
+      print("Plane parameters: ")
+      print(segmentation.planeParameters)
+      print("Number of found objects: " .. segmentation.objIndices:size())
+
+      if (VISUALIZE) then
+	viewer:removeAllPointClouds()
+        viewer:addCoordinateSystem(0.05)  -- world coordinate system
+
+        viewer:addPointCloud(segmentation.planeCloud, 'plane')
+        viewer:setPointCloudRenderingProperties1(pcl.RenderingProperties.PCL_VISUALIZER_POINT_SIZE, 2, 'plane')
+        local cloudColor = getColor(1)
+        viewer:setPointCloudRenderingProperties3(pcl.RenderingProperties.PCL_VISUALIZER_COLOR, 
+                                                 cloudColor[1], cloudColor[2], cloudColor[3], 'plane')
+
+        viewer:addPointCloud(segmentation.notPlaneCloud, 'notPlane')
+        viewer:setPointCloudRenderingProperties1(pcl.RenderingProperties.PCL_VISUALIZER_POINT_SIZE, 2, 'notPlane')
+        local cloudColor = getColor(2)
+        viewer:setPointCloudRenderingProperties3(pcl.RenderingProperties.PCL_VISUALIZER_COLOR, 
+                                                 cloudColor[1], cloudColor[2], cloudColor[3], 'notPlane')
+
+	local numberOfClusters = segmentation.objIndices:size()
+        for i=1, numberOfClusters do
+          local currObj = pcl.filter.extractIndices(segmentation.objCloud, segmentation.objIndices[i], nil, false)
+          viewer:addPointCloud(currObj, 'obj'..i)
+          viewer:setPointCloudRenderingProperties1(pcl.RenderingProperties.PCL_VISUALIZER_POINT_SIZE, 2, 'obj'..i)
+          local cloudColor = getColor(2+i)
+          viewer:setPointCloudRenderingProperties3(pcl.RenderingProperties.PCL_VISUALIZER_COLOR, 
+                                                   cloudColor[1], cloudColor[2], cloudColor[3], 'obj'..i)
+        end
+
+        viewer:spin()
+      end
 
       if (segmentation.objMeans:dim(1) > 0) and (segmentation.objMeans:size(1) > 0) then
 
@@ -264,6 +351,15 @@ local function main(N)
           poses.approache = createApproachPose(target, APPROACH_DISTANCE)
           poses.grip = createGripPose(target, GRIP_POSE_Z_DISTANCE)
           poses.drop = createDropPose(poses.approache)
+
+          if (VISUALIZE) then
+            local pickObj = pcl.filter.extractIndices(segmentation.objCloud, segmentation.objIndices[target.cloud_index], nil, false)
+            viewer:addPointCloud(pickObj, 'pickobj')
+            viewer:setPointCloudRenderingProperties1(pcl.RenderingProperties.PCL_VISUALIZER_POINT_SIZE, 3, 'pickobj')
+            -- set the point cloud of the next object to pick to red
+            viewer:setPointCloudRenderingProperties3(pcl.RenderingProperties.PCL_VISUALIZER_COLOR, 1.0, 0.2, 0.2, 'pickobj')
+            viewer:spinOnce()
+          end
 
           fsm_state = STATE_PICKING
           pickObject()
