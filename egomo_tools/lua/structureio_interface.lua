@@ -83,7 +83,6 @@ end
 
 function StructureIOInterface:GrabIRNoSpeckleViaROS ()
    -- set a message to the given service, in this case just an integer 1 to request a new image
-   print("This is GrabIRNoSpeckleViaROS")
    local msgIRCam = self.serviceGetNewImg:call(2)
 
    if not (msgIRCam == nil) then
@@ -92,7 +91,7 @@ function StructureIOInterface:GrabIRNoSpeckleViaROS ()
     local imgHeight = msgIRCam.img.height
     
      local imageIRfull = torch.ShortTensor(imgHeight, imgWidth, 1)
-    ffi.copy(imageIRfull:storage():data(), msgIRCam.img.data:storage():data(), imgHeight*imgWidth*2)
+    ffi.copy(imageIRfull:data(), msgIRCam.img.data:data(), imgHeight*imgWidth*2)
 
     -- example png decompression
     --local imageIRfull = imageHandler.decompressPNG(msgIRCam.img.data)
@@ -128,7 +127,7 @@ function StructureIOInterface:GrabIRDefaultImageViaROS ()
     local imgHeight = msgIRCam.img.height
 
     local imageIRfull = torch.ShortTensor(imgHeight, imgWidth, 1)
-    ffi.copy(imageIRfull:storage():data(), msgIRCam.img.data:storage():data(), imgHeight*imgWidth*2)
+    ffi.copy(imageIRfull:data(), msgIRCam.img.data:data(), imgHeight*imgWidth*2)
 
     local imageIR8bit = imageIRfull:type('torch.FloatTensor')
     local a=imageIR8bit:max()
@@ -180,7 +179,7 @@ local timer = torch.Timer()
     local imgWidth = msgDepthCam.img.width
     local imgHeight = msgDepthCam.img.height
     local imageDepth = torch.ShortTensor(imgHeight, imgWidth, 1)
-    ffi.copy(imageDepth:storage():data(), msgDepthCam.img.data:storage():data(), imgHeight*imgWidth*2)
+    ffi.copy(imageDepth:data(), msgDepthCam.img.data:data(), imgHeight*imgWidth*2)
     imageDepth = imageDepth:type('torch.FloatTensor')
     imageDepth:mul(1.0/1000) -- convert from mm to meter
     timer:stop()
