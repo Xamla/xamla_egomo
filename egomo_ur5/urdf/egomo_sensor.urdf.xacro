@@ -2,7 +2,7 @@
 <robot name="egomo_sensor" xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:include filename="$(find egomo_ur5)/urdf/default_egomo_sensor_parameters.xacro" />
     <xacro:macro name="egomo_sensor" params="prefix parent *origin">
-        <property name="pi" value="3.1415926535898" />
+        <xacro:property name="pi" value="3.1415926535898" />
         <!-- ========================================== -->
         <!-- Mount the force torque sensor (fts) to the robot -->
         <joint name="${prefix}fts_to_robot" type="fixed">
