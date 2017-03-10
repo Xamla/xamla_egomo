@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="egomo_ur5" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="egomo_ur5" xmlns:xacro="http://ros.org/wiki/xacro">
     <xacro:include filename="$(find egomo_ur5)/urdf/ur5_robot.urdf.xacro" />
     <xacro:include filename="$(find egomo_ur5)/urdf/egomo_sensor.urdf.xacro" />
     <xacro:include filename="$(find egomo_ur5)/urdf/robotiq_85_gripper.urdf.xacro" />
@@ -9,13 +9,7 @@
     <xacro:ur5 prefix="" parent="world">
         <origin xyz="0 0 0" rpy="0 0 0" />
     </xacro:ur5>
-    <!-- ==============add tool0 for moveit naming convention=========== -->
-    <link name="tool0" />
-    <joint name="wrist_3_link-tool0_fixed_joint" type="fixed">
-        <origin rpy="0  0 0" xyz="0 0.0 0.2" />
-        <parent link="wrist_3_link" />
-        <child link="tool0" />
-    </joint>
+
     <!-- ==============add EGOMO senor component=============== -->
     <xacro:egomo_sensor prefix="" parent="wrist_3_link">
         <origin xyz="0 0 0.011" rpy="0 0 0" />
@@ -25,5 +19,13 @@
     <xacro:robotiq_85_gripper prefix="" parent="fts_toolside">
         <origin xyz="0 0 -0.003" rpy="0 0 0" />
     </xacro:robotiq_85_gripper>
+
+    <!-- ==============add tool0 for moveit naming convention=========== -->
+    <link name="tool0" />
+    <joint name="fts_toolside-tool0_fixed_joint" type="fixed">
+        <origin rpy="0  0 0" xyz="0 0.0 0.175" />
+        <parent link="fts_toolside" />
+        <child link="tool0" />
+    </joint>
 
 </robot>
